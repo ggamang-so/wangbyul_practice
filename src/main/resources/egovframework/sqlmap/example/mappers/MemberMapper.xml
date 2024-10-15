@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.dao.MemberDao">
+<!--    <resultMap id="memberDto" type="egovframework.example.dto.MemberDto">-->
+<!--        <id property="memberId" column="memberid"/>-->
+<!--        <result property="memberPassword" column="password"/>-->
+<!--        <result property="createdAt" column="createdat"/>-->
+
+<!--    </resultMap>-->
+    <select id="findById" resultType="egovframework.example.dto.MemberDto">
+        select * from study.member where memberid=#{param1}
+    </select>
+
+</mapper>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Article List</title>
+    <link href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" rel="stylesheet" />
+    <script src="../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../static/kendo/js/kendo.all.min.js"></script>
+    <!--  한글화 -->
+    <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+
+</head>
+<body>
+<div id="example"  style="width: 80%; margin: auto;">
+    <div>
+        <div>
+            <h4>Board</h4>
+            <input id="productName" name="productName" />
+        </div>
+        <div id="grid"></div>
+    </div>
+<script>
+    $(function () {
+
+        var productsDataSource = new kendo.data.DataSource({
+            type: "odata",
+            transport: {
+                read: {
+                    url: "/articles",
+                    contentType: "application/json",
+                    dataType: "json",
+                    method: "POST"
+                },
+            },
+            schema: {
+                data: "value", // OData의 데이터 배열 경로
+                total: function (response) {
+                    return response["@odata.count"]; // 전체 데이터 개수
+                }
+            }
+
+        });
+        console.log(productsDataSource.data())
+        productsDataSource.read();
+
+
+        $("#productName").kendoAutoComplete({
+            autoBind: false,
+            dataSource: productsDataSource,
+            dataTextField: "ProductName",
+            filter: "contains",
+            minLength: 2
+        });
+
+        $("#grid").kendoGrid({
+            dataSource: productsDataSource,
+            autoBind: false,
+            pageable: true,
+            height: 300,
+            selectable: true,
+            columns: [
+                {field: "id", title: "Id", width: "50px"},
+                {
+                    field: "title",
+                    title: "Title",
+                    template: '<a href="javascript:void(0)" class="detail-link">#: title #</a>'
+                },
+                {field: "memberId", title: "author", width: "100px"}
+            ],
+            dataBound: function () {
+                // 데이터 바인딩 후 클릭 이벤트 설정
+                $(".detail-link").on("click", function (e) {
+                    var row = $(this).closest("tr"); // 클릭한 링크의 부모 행
+                    var dataItem = $("#grid").data("kendoGrid").dataItem(row); // 해당 행의 데이터 아이템
+
+                    // 세부 정보 페이지로 이동
+                    window.location.href = "/article/" + dataItem.id; // 예시 URL
+                })
+            }
+        });
+
+    });
+
+</script>
+</div>
+</body>
+</html>

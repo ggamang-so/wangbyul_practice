@@ -1,0 +1,48 @@
+// Compatible with @progress/kendo-theme-default v.7.2.0
+
+%tb-typography {
+  @include typography-classes($tb-typography);
+}
+
+%tb-effects {
+  @include effects-classes($tb-effects);
+}
+
+    .k-multiselect.k-input .k-input-values .k-chip-list.k-chip-list-md .k-chip.k-chip-solid-base{
+        color: $tb-kendo-chip-solid-border;
+        
+}
+    .k-button.k-hover.k-button-solid-base, .k-button.k-state-hover.k-button-solid-base, .k-button.k-state-hovered.k-button-solid-base, .k-button:hover.k-button-solid-base{
+        background-color: $tb-kendo-button-active-bg;
+                background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.02));
+        
+}
+    .k-multiselect.k-input .k-input-values .k-chip-list.k-chip-list-md .k-chip.k-hover,.k-multiselect.k-input .k-input-values .k-chip-list.k-chip-list-md  .k-chip.k-state-hover,.k-multiselect.k-input .k-input-values .k-chip-list.k-chip-list-md  .k-chip.k-state-hovered,.k-multiselect.k-input .k-input-values .k-chip-list.k-chip-list-md  .k-chip:hover{
+        color: $tb-kendo-chip-solid-text;
+        
+}
+    .k-filter .k-filter-container .k-filter-group-main .k-filter-toolbar .k-toolbar> .k-toolbar-button-group .k-toolbar-button.k-selected.k-button-solid-base{
+        background-color: $tb-kendo-color-primary;
+                background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.02));
+        
+}
+    .k-scheduler .k-toolbar.k-scheduler-toolbar .k-button-group.k-scheduler-views .k-button.k-button-md.k-button-solid.k-button-solid-base.k-rounded-md.k-selected{
+        background-color: $tb-kendo-color-primary;
+                background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.02));
+        
+}
+    .k-grid.k-grid-md .k-table .k-table-tbody .k-table-row.k-master-row{
+        background-color: initial;
+                background-image: none;
+        
+}
+    .k-grid.k-grid-md .k-table-tbody .k-master-row.k-table-row >td{
+        background-color: initial;
+                background-image: none;
+        
+}
+    .k-grid.k-grid-md .k-table .k-table-tbody .k-master-row.k-table-row.k-selected >td{
+        background-color: $tb-kendo-breadcrumb-border;
+                background-image: none;
+        
+}

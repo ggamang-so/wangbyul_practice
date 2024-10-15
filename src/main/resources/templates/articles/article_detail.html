@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Article_detail</title>
+    <script src="../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../static/kendo/js/kendo.all.min.js"></script>
+    <!--  한글화 -->
+    <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <style>
+        #content {
+            width: 80%;
+            height: 50%;
+        }
+    </style>
+</head>
+<body>
+<div id="article" data-message="${article}"></div>
+
+<script>
+     $(function(){
+        var article = $("#article").data("article");
+        console.log(article);
+     });
+</script>
+</body>
+</html>

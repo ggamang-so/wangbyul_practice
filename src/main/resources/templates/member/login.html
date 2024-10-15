@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../static/kendo/js/kendo.all.min.js"></script>
+    <!--  한글화 -->
+    <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+
+</head>
+<body>
+    <div>login
+        <form id="login-form" action="/loginOk" method="POST">
+        </form>
+    </div>
+
+<script>
+    $(function(){
+        $("#login-form").kendoForm({
+            orientation: "vertical",
+            formData: {
+                memberId: "",
+                memberPassword: ""
+            },
+            items:[{
+                field: "memberId",
+                label: "ID",
+                validation: {required: true}
+            },{
+                field: "memberPassword",
+                label: "Password",
+                validation: {required: true}
+            }]
+
+        });
+    })
+</script>
+</body>
+</html>
