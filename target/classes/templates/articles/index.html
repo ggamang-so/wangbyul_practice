@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -10,80 +10,125 @@
     <!--  한글화 -->
     <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
     <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <style>
+        #member-button{
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-right: 10px
+        }
+    </style>
+    <script>
+        $(function () {
+            let loginStatus =$("#login-status").text();
 
+            if(loginStatus === "Y"){
+                $("#login").css("display","none");
+                $("#logout").css("display","block");
+                $("#welcome_comment").css("display","block");
+            }else if(loginStatus === "N" || loginStatus == null){
+                $("#login").css("display","block");
+                $("#logout").css("display","none");
+                $("#welcome_comment").css("display","none");
+            }
+
+            $("#login").click(function(){
+                window.location.href = "/login";
+            })
+            $("#logout").click(function(){
+                if(confirm("로그아웃 하시겠습니까?")){
+                    window.location.href = "/logout";
+                }
+            })
+            $("#write").click(function(){
+                if(loginStatus !== "Y"){
+                    alert("login을 해야 글쓰기를 할 수 있습니다.")
+                    return false;
+                }
+                window.location.href = "/article/create";
+            })
+
+
+            let productsDataSource = new kendo.data.DataSource({
+                type: "odata",
+                transport: {
+                    read: {
+                        url: "/articles",
+                        contentType: "application/json",
+                        dataType: "json",
+                        method: "POST"
+                    },
+                },
+                schema: {
+                    data: "value", // OData의 데이터 배열 경로
+                    total: function (response) {
+                        return response["@odata.count"]; // 전체 데이터 개수
+                    }
+                }
+
+            });
+            console.log(productsDataSource.data())
+            productsDataSource.read();
+
+
+            $("#productName").kendoAutoComplete({
+                autoBind: false,
+                dataSource: productsDataSource,
+                dataTextField: "ProductName",
+                filter: "contains",
+                minLength: 2
+            });
+
+            $("#grid").kendoGrid({
+                dataSource: productsDataSource,
+                autoBind: false,
+                pageable: true,
+                height: 300,
+                selectable: true,
+                columns: [
+                    {field: "id", title: "Id", width: "50px"},
+                    {
+                        field: "title",
+                        title: "Title",
+                        template: '<a href="javascript:void(0)" class="detail-link">#: title #</a>'
+                    },
+                    {field: "memberId", title: "author", width: "100px"}
+                ],
+                dataBound: function () {
+                    // 데이터 바인딩 후 클릭 이벤트 설정
+                    $(".detail-link").on("click", function (e) {
+                        var row = $(this).closest("tr"); // 클릭한 링크의 부모 행
+                        var dataItem = $("#grid").data("kendoGrid").dataItem(row); // 해당 행의 데이터 아이템
+
+                        // 세부 정보 페이지로 이동
+                        window.location.href = "/article/" + dataItem.id; // 예시 URL
+                    })
+                }
+            });
+
+        });
+
+    </script>
 </head>
 <body>
+<span id="login-status" th:text="${loginStatus}" hidden></span>
 <div id="example"  style="width: 80%; margin: auto;">
     <div>
         <div>
             <h4>Board</h4>
+            <div id="member-button">
+                <button id="login" class="k-button-md">login</button>
+                <div id="welcome_comment" th:text="${loginId}"></div>
+                <button id="logout" class="k-button-solid-primary">logout</button>
+            </div>
             <input id="productName" name="productName" />
         </div>
         <div id="grid"></div>
     </div>
-<script>
-    $(function () {
+    <div>
+        <button id="write" style="float:right;"> write </button>
+    </div>
 
-        var productsDataSource = new kendo.data.DataSource({
-            type: "odata",
-            transport: {
-                read: {
-                    url: "/articles",
-                    contentType: "application/json",
-                    dataType: "json",
-                    method: "POST"
-                },
-            },
-            schema: {
-                data: "value", // OData의 데이터 배열 경로
-                total: function (response) {
-                    return response["@odata.count"]; // 전체 데이터 개수
-                }
-            }
-
-        });
-        console.log(productsDataSource.data())
-        productsDataSource.read();
-
-
-        $("#productName").kendoAutoComplete({
-            autoBind: false,
-            dataSource: productsDataSource,
-            dataTextField: "ProductName",
-            filter: "contains",
-            minLength: 2
-        });
-
-        $("#grid").kendoGrid({
-            dataSource: productsDataSource,
-            autoBind: false,
-            pageable: true,
-            height: 300,
-            selectable: true,
-            columns: [
-                {field: "id", title: "Id", width: "50px"},
-                {
-                    field: "title",
-                    title: "Title",
-                    template: '<a href="javascript:void(0)" class="detail-link">#: title #</a>'
-                },
-                {field: "memberId", title: "author", width: "100px"}
-            ],
-            dataBound: function () {
-                // 데이터 바인딩 후 클릭 이벤트 설정
-                $(".detail-link").on("click", function (e) {
-                    var row = $(this).closest("tr"); // 클릭한 링크의 부모 행
-                    var dataItem = $("#grid").data("kendoGrid").dataItem(row); // 해당 행의 데이터 아이템
-
-                    // 세부 정보 페이지로 이동
-                    window.location.href = "/article/" + dataItem.id; // 예시 URL
-                })
-            }
-        });
-
-    });
-
-</script>
 </div>
 </body>
 </html>

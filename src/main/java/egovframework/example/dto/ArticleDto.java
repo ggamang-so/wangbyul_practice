@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 public class ArticleDto {
-    private long id;
+    private int id;
     private String title;
     private String content;
     private String memberId;

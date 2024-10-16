@@ -10,5 +10,13 @@ public interface ArticleDao {
 
     List<ArticleDto> findAllArticle();
 
-    ArticleDto findById(long id);
+    ArticleDto findById(int id);
+
+    void deleteById(int id);
+
+    void save(ArticleDto article);
+
+    int returningId();
+
+    void update(ArticleDto article);
 }

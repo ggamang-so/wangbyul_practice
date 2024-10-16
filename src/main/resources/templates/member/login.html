@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
@@ -18,6 +18,14 @@
 
 <script>
     $(function(){
+
+        let errorMessage = "[[${errorMessage}]]";
+
+        if (errorMessage) {
+            alert(errorMessage); // 오류 메시지를 alert로 표시
+        }
+
+
         $("#login-form").kendoForm({
             orientation: "vertical",
             formData: {

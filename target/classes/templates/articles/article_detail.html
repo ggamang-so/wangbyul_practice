@@ -1,28 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Article_detail</title>
-    <script src="../static/js/jquery-3.7.1.min.js"></script>
-    <script src="../static/kendo/js/kendo.all.min.js"></script>
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/kendo/js/kendo.all.min.js"></script>
     <!--  한글화 -->
-    <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
-    <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
         #content {
             width: 80%;
             height: 50%;
         }
     </style>
+    <script>
+
+        $(function(){
+            let loginId =$("#login-id").text();
+            let memberId=$("#author").text();
+
+            if(loginId!==memberId){
+                $("#article_delete").css("display","none");
+                $("#article_update").css("display","none");
+            }
+
+
+            let id = $("#id").text();
+            $("#article_update").click(function(){
+                window.location.href = "/article/update/" + id;
+            })
+            $("#article_delete").click(function(){
+                window.location.href = "/article/delete/" + id;
+            })
+
+
+
+        })
+    </script>
 </head>
 <body>
-<div id="article" data-message="${article}"></div>
+    <div id="article_detail" >
+        <span id="login-id" th:data="${loginId}" th:text="${loginId}" hidden></span>
+        <span id="id" th:data="${article.id}" th:text="${article.id}" hidden></span>
+        <div id="title" th:text="${article.title}">
 
-<script>
-     $(function(){
-        var article = $("#article").data("article");
-        console.log(article);
-     });
-</script>
+        </div>
+        <div id="author" th:text="${article.memberId}">
+
+        </div>
+        <div id="created-at" th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
+
+        </div>
+        <div id="content" th:text="${article.content}">
+
+        </div>
+
+    </div>
+        <button id="article_update">수정</button>
+        <button id="article_delete">삭제</button>
+
 </body>
 </html>

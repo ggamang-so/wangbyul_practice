@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Article_editor</title>
+  <script src="/static/js/jquery-3.7.1.min.js"></script>
+  <script src="/static/kendo/js/kendo.all.min.js"></script>
+  <!--  한글화 -->
+  <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+  <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <style>
+        #content {
+            width: 80%;
+            height: 50%;
+        }
+    </style>
+</head>
+<body>
+<form id="article_write_form" action="/article/writeOk" method="post">
+
+
+  <span id="member-id" th:data="${loginId}" th:text="${loginId}" hidden/>
+
+
+
+</form>
+
+<script>
+
+  $(function () {
+    let memberid = $("#member-id").text();
+
+    $("#article_write_form").kendoForm({
+      orientation: "vertical",
+      formData: {
+        title: "",
+        content: "",
+        memberId: memberid
+      },
+      items: [{
+        field: "title",
+        label: "Title",
+        validation: {required: true}
+      }, {
+        field: "content",
+        label: "Content"
+      },{
+        field: "memberId",
+        label: "Author",
+        validation: { required: true, readOnly: true }
+      }]
+    }).submit(function(){
+      if(!confirm("글을 저장하시겠습니까??")){
+        return false;
+      }
+      let form = $("#article_write_form");
+      let formData = new FormData(form);
+      console.log(formData);
+      return false;
+    })
+  })
+    </script>
+</body>
+</html>

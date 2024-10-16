@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 /**
@@ -30,12 +31,10 @@ import org.springframework.web.servlet.ModelAndView;
 public class MemberController {
 
     final MemberService memberService;
-    private final DataSourceTransactionManagerAutoConfiguration dataSourceTransactionManagerAutoConfiguration;
 
 
-    public MemberController(MemberService memberService, DataSourceTransactionManagerAutoConfiguration dataSourceTransactionManagerAutoConfiguration) {
+    public MemberController(MemberService memberService) {
         this.memberService = memberService;
-        this.dataSourceTransactionManagerAutoConfiguration = dataSourceTransactionManagerAutoConfiguration;
     }
 
     @GetMapping("/signup")
@@ -45,7 +44,7 @@ public class MemberController {
 
     @GetMapping("/login")
     public String login(HttpSession session) {
-        if(session.getAttribute("loginStatus").equals("Y")||session.getAttribute("loginStatus")!=null){
+        if(session.getAttribute("loginStatus")=="Y" && session.getAttribute("loginStatus")!=null){
             return "redirect:/";
         }
         return "member/login";
@@ -54,31 +53,26 @@ public class MemberController {
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.setAttribute("loginStatus", "N");
-        session.removeAttribute("memberId");
+        session.removeAttribute("loginId");
         return "redirect:/";
     }
 
     @PostMapping("/loginOk")
-    public String loginOk(String memberId, String memberPassword, HttpSession session) {
+    public String loginOk(String memberId, String memberPassword, HttpSession session, RedirectAttributes redirectAttributes) {
         MemberDto dto = memberService.getMemberById(memberId, memberPassword);
         if(dto!=null) {
-            session.setAttribute("memberId", memberId);
+            session.setAttribute("loginId", memberId);
             session.setAttribute("loginStatus", "Y");
-            System.out.println(session.getAttribute("memberId"));
+            System.out.println(session.getAttribute("loginId"));
             System.out.println(session.getAttribute("loginStatus"));
         }
         if(dto==null){
+            redirectAttributes.addFlashAttribute("errorMessage", "회원 정보를 찾을 수 없습니다.");
             return "redirect:/login";
 
         }
-        return "articles/index";
+        return "redirect:/";
     }
-
-//    @PostMapping("/member_id_check")
-//    public String idCheck(String memberId, String memberPassword, ModelMap map) throws EntityNotFoundException {
-//        memberService.searchMember(memberId);
-//
-//    }
 
     @PostMapping("/register")
     public String register(MemberDto memberDto) {

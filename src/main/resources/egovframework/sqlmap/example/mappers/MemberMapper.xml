@@ -10,7 +10,7 @@
 
 <!--    </resultMap>-->
     <select id="findById" resultType="egovframework.example.dto.MemberDto">
-        select * from study.member where memberid=#{param1}
+        select * from member where memberid=#{memberId} and memberpassword=#{memberPassword}
     </select>
 
 </mapper>

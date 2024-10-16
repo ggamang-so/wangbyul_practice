@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <title>Article_editor</title>
-    <script src="../static/js/jquery-3.7.1.min.js"></script>
-    <script src="../static/kendo/js/kendo.all.min.js"></script>
-    <!--  한글화 -->
-    <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
-    <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+  <script src="/static/js/jquery-3.7.1.min.js"></script>
+  <script src="/static/kendo/js/kendo.all.min.js"></script>
+  <!--  한글화 -->
+  <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+  <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
         #content {
             width: 80%;
@@ -16,23 +16,55 @@
     </style>
 </head>
 <body>
-<textarea id="content">
+<form id="article_editor_form" action="/article/updateOk" method="post">
 
-</textarea>
+  <span id="id" th:data="${article.id}" th:text="${article.id}" hidden/>
+  <span id="member-id" th:data="${article.memberId}" th:text="${article.memberId}" hidden/>
+  <span id="title" th:data="${article.title}" th:text="${article.title}" hidden/>
+  <span id="content" th:data="${article.content}" th:text="${article.content}"  hidden/>
+
+
+
+</form>
 
 <script>
+
   $(function () {
-    $("#content").kendoTextArea({
-        label: {
-            content: "게시글 내용",
-            floating: true
-        },
-        value: "Lorem Ipsum is simply dummy text of the printing and typesetting industry." +
-              "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book." +
-              "It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
-        rows: 20,
-        overflow: "auto"
-    }).data('kendoTextArea').addClass("expandEditor");
+    let id = $("#id").text();
+    let title = $("#title").text();
+    let content = $("#content").text();
+    let memberid = $("#member-id").text();
+
+
+    console.log(title)
+    console.log(content)
+
+    $("#article_editor_form").kendoForm({
+      orientation: "vertical",
+      formData: {
+        id:id,
+        title: title,
+        content: content,
+        memberid: memberid
+      },
+      items: [{
+        field: "id",
+        label: "Id",
+        validation: {required: true, readonly: true}
+      },{
+        field: "title",
+        label: "Title",
+        validation: {required: true}
+      }, {
+        field: "content",
+        label: "Content",
+        validation: {required: true}
+      }, {
+        field: "memberid",
+        label: "Author",
+        validation: {required: true, readonly: true}
+      }]
+    })
   })
     </script>
 </body>
