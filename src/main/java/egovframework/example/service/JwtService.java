@@ -1,4 +1,4 @@
 package egovframework.example.service;
 
-public interface ArticleService {
+public interface JwtService {
 }

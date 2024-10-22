@@ -4,18 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Article List</title>
-    <link href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" rel="stylesheet" />
-    <script src="../static/js/jquery-3.7.1.min.js"></script>
-    <script src="../static/kendo/js/kendo.all.min.js"></script>
+    <link href="/static/kendo/css/common.css" rel="stylesheet"/>
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/kendo/js/kendo.all.min.js"></script>
     <!--  한글화 -->
-    <script src="../static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
-    <script src="../static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
         #member-button{
             display: flex;
-            justify-content: flex-end;
+            justify-content: end;
+            align-items: center;
             gap: 10px;
-            padding-right: 10px
+            padding-right: 10px;
+            margin-bottom: 10px;
+        }
+        .k-input-solid {
+            --kendo-input-border : #bbbbbb
         }
     </style>
     <script>
@@ -39,13 +44,6 @@
                 if(confirm("로그아웃 하시겠습니까?")){
                     window.location.href = "/logout";
                 }
-            })
-            $("#write").click(function(){
-                if(loginStatus !== "Y"){
-                    alert("login을 해야 글쓰기를 할 수 있습니다.")
-                    return false;
-                }
-                window.location.href = "/article/create";
             })
 
 
@@ -71,28 +69,34 @@
             productsDataSource.read();
 
 
-            $("#productName").kendoAutoComplete({
-                autoBind: false,
-                dataSource: productsDataSource,
-                dataTextField: "ProductName",
-                filter: "contains",
-                minLength: 2
-            });
-
             $("#grid").kendoGrid({
+                toolbar: [{
+                    type: "button",
+                    text: "새 글쓰기",
+                    click: onCreateClick
+                }],
                 dataSource: productsDataSource,
                 autoBind: false,
                 pageable: true,
                 height: 300,
                 selectable: true,
                 columns: [
-                    {field: "id", title: "Id", width: "50px"},
+                    {field: "id", title: "Id", width: "50px", editable: false},
                     {
                         field: "title",
                         title: "Title",
                         template: '<a href="javascript:void(0)" class="detail-link">#: title #</a>'
+                    }, {
+                        field: "content",
+                        title: "Content",
+                        hidden: true
+                    }, {
+                        field: "createdAt",
+                        title: "CreatedAt",
+                        hidden: true,
+                        editable: false
                     },
-                    {field: "memberId", title: "author", width: "100px"}
+                    {field: "memberId", title: "author", width: "100px", editable: false},
                 ],
                 dataBound: function () {
                     // 데이터 바인딩 후 클릭 이벤트 설정
@@ -106,7 +110,30 @@
                 }
             });
 
+            function onCreateClick() {
+                if(loginStatus !== "Y"){
+                    alert("login을 해야 글쓰기를 할 수 있습니다.")
+                    return false;
+                }
+                window.location.href = "/article/create";
+            }
+
+            $("#login").kendoButton({
+                size: "large",
+                themeColor: "info",
+                rounded: "large",
+                fillMode: "solid"
+            });
+            $("#logout").kendoButton({
+                size: "large",
+                themeColor: "error",
+                rounded: "large",
+                fillMode: "solid"
+            });
+
         });
+
+
 
     </script>
 </head>
@@ -115,18 +142,14 @@
 <div id="example"  style="width: 80%; margin: auto;">
     <div>
         <div>
-            <h4>Board</h4>
+            <h3>게시판</h3>
             <div id="member-button">
                 <button id="login" class="k-button-md">login</button>
                 <div id="welcome_comment" th:text="${loginId}"></div>
                 <button id="logout" class="k-button-solid-primary">logout</button>
             </div>
-            <input id="productName" name="productName" />
         </div>
         <div id="grid"></div>
-    </div>
-    <div>
-        <button id="write" style="float:right;"> write </button>
     </div>
 
 </div>

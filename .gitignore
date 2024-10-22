@@ -1,0 +1,13 @@
+# Ignore Spring Boot application properties
+/application.properties
+
+# Ignore other IDE files
+/.idea/
+/*.iml
+
+# Ignore build files
+/build/
+target/
+
+# Ignore log files
+*.log
