@@ -31,5 +31,6 @@ public class ArticleDto {
     private String content;
     private String memberId;
     private LocalDateTime createdAt;
+    private boolean isAuthor;
 
 }

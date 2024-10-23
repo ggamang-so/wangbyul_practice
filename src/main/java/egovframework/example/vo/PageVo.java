@@ -1,4 +1,15 @@
 package egovframework.example.vo;
 
-public class pageVo {
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+public class PageVo {
+    private int page;
+    private int pageSize;
 }

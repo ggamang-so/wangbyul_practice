@@ -8,7 +8,7 @@ import java.util.List;
 @Mapper
 public interface ArticleDao {
 
-    List<ArticleDto> findAllArticle();
+    List<ArticleDto> findAllArticle(int page, int pageSize) throws Exception;
 
     ArticleDto findById(int id);
 
@@ -19,4 +19,6 @@ public interface ArticleDao {
     int returningId();
 
     void update(ArticleDto article);
+
+    int totalArticleCount();
 }

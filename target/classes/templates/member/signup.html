@@ -1,11 +1,171 @@
 <!DOCTYPE html>
-<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Sign up</title>
+    <link href="/static/kendo/css/common.css" rel="stylesheet"/>
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/kendo/js/kendo.all.min.js"></script>
+    <!--  한글화 -->
+    <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <style>
+
+        #signup_container {
+            width: 80%;
+            height: 70%;
+            margin: 0 auto;
+            padding-top: 100px;
+        }
+
+        .k-input-solid {
+            --kendo-input-border: #bbbbbb
+        }
+
+        .k-button-solid-base {
+            --kendo-button-border: #bbbbbb
+        }
+
+        .k-picker-solid {
+            --kendo-picker-border: #bbbbbb
+        }
+
+        .k-form-field {
+            margin-bottom: 15px;
+        }
+
+        .k-input-inner {
+            height: 30px;
+            margin-top: 10px
+        }
+    </style>
+    <script>
+        $(function () {
+            let errorMessage = "[[${errorMessage}]]";
+
+            if (errorMessage) {
+                alert(errorMessage); // 오류 메시지를 alert로 표시
+            }
+            // Define the form fields
+            var formFields = [
+                {
+                    field: "memberId",
+                    label: "Member ID",
+                    validation: {
+                        required: true,
+                        minLength: 4
+                    }
+                },
+                {
+                    field: "memberPassword",
+                    label: "Password",
+                    validation: {
+                        required: true,
+                        minLength: 6
+                    },
+                    editor: function (container, options) {
+                        $('<input type="password" id="password" name="' + options.field + '" title="Password" autocomplete="off" aria-labelledby="Password-form-label" data-bind="value: Password" aria-describedby="Password-form-hint"/>')
+                            .appendTo(container)
+                            .kendoTextBox();
+                    }
+                }, {
+                    field: "passwordConfirm",
+                    label: "Password Confirmation",
+                    editor: function (container, options) {
+                        $('<input type="password" id="password_confirm"  autocomplete="off" aria-labelledby="Password-form-label" />')
+                            .appendTo(container)
+                            .kendoTextBox();
+                    }, validation: {
+                        required: true,
+                        custom: function (input) {
+                            if (input.is("[id='password_confirm']") && input.val() !== $("#password").val()) {
+                                $("#error_message").css("display", "block");
+                                return false;
+                            }
+                            return true;
+                        }
+                    }
+                },
+                {
+                    field: "name",
+                    label: "Name",
+                    validation: {
+                        required: true,
+
+                    }
+                },{
+                    field: "email",
+                    label: "E-mail",
+                    validation: {
+                        required: true,
+                        type: "email",
+                    }
+                },{
+                    field: "nickname",
+                    label: "Nick Name",
+
+                }
+            ];
+
+
+            // Create the Kendo Form
+            $("#signup_form").kendoForm({
+                orientation: "vertical",
+                formData: {
+                    memberId: "",
+                    memberPassword: ""
+                },
+                items: formFields,
+                buttonsTemplate:
+                    '<button id="signupBtn" type="submit" > 회원가입 </button>' +
+                    '<button id="cancelBtn" > 취소 </button>',
+                submit: function (e) {
+                    e.preventDefault();
+                    if ($("#password").val() != $("#password_confirm").val()) {
+                        alert("오류");
+                        $("#error_message").css("display", "block");
+                        return false;
+
+                    } else {
+                        this.submit();
+                    }
+
+
+                    // Custom submit logic (e.g., send form data to the server via AJAX)
+                    // You can use $.ajax() to send formData to your server
+                }
+            });
+            $("#cancelBtn").click(function () {
+                if (confirm("취소하시면 지금까지 작성하신 모든 내용을 잃게 됩니다. 정말 취소하시겠습니까?")) {
+                    window.location.href = "/";
+                }
+            })
+
+            $("#cancelBtn").kendoButton({
+                size: "large",
+                themeColor: "base",
+                rounded: "large",
+                fillMode: "solid"
+            });
+            $("#signupBtn").kendoButton({
+                size: "large",
+                themeColor: "success",
+                rounded: "large",
+                fillMode: "solid"
+            });
+
+        })
+            ;
+    </script>
 </head>
 <body>
- sign up page
+<div id="signup_container">
+    <div id="error_message" style="color:red; border:none; display:none"> 비밀번호가 일치하지 않습니다. </div>
+
+    <form id="signup_form" action="/api/member/signup" method="post">
+
+    </form>
+</div>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -11,7 +11,7 @@
     <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
     <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
-        #member-button{
+        #member-button {
             display: flex;
             justify-content: end;
             align-items: center;
@@ -19,69 +19,88 @@
             padding-right: 10px;
             margin-bottom: 10px;
         }
+
         .k-input-solid {
-            --kendo-input-border : #bbbbbb
+            --kendo-input-border: #bbbbbb
         }
     </style>
-    <script>
+    <script th:inline="javascript">
         $(function () {
-            let loginStatus =$("#login-status").text();
-
-            if(loginStatus === "Y"){
-                $("#login").css("display","none");
-                $("#logout").css("display","block");
-                $("#welcome_comment").css("display","block");
-            }else if(loginStatus === "N" || loginStatus == null){
-                $("#login").css("display","block");
-                $("#logout").css("display","none");
-                $("#welcome_comment").css("display","none");
+            let errorMessage = [[${errorMessage}]]
+            if(errorMessage!=null){
+                alert(errorMessage);
             }
 
-            $("#login").click(function(){
+
+            let loginMember =  /*[[${member}]]*/ {};
+
+            if (loginMember) {
+                $("#loginBtn").css("display", "none");
+                $("#logoutBtn").css("display", "block");
+                $("#loginId").text(loginMember.memberId).css("display", "block");
+            } else if (!loginMember) {
+                $("#loginBtn").css("display", "block");
+                $("#logoutBtn").css("display", "none");
+                $("#loginId").css("display", "none");
+            }
+
+            $("#loginBtn").click(function () {
                 window.location.href = "/login";
             })
-            $("#logout").click(function(){
-                if(confirm("로그아웃 하시겠습니까?")){
+            $("#logoutBtn").click(function () {
+                if (confirm("로그아웃 하시겠습니까?")) {
                     window.location.href = "/logout";
                 }
             })
 
-
-            let productsDataSource = new kendo.data.DataSource({
-                type: "odata",
-                transport: {
-                    read: {
-                        url: "/articles",
-                        contentType: "application/json",
-                        dataType: "json",
-                        method: "POST"
-                    },
-                },
-                schema: {
-                    data: "value", // OData의 데이터 배열 경로
-                    total: function (response) {
-                        return response["@odata.count"]; // 전체 데이터 개수
-                    }
-                }
-
-            });
-            console.log(productsDataSource.data())
-            productsDataSource.read();
-
-
-            $("#grid").kendoGrid({
+            $("#articleTable").kendoGrid({
                 toolbar: [{
                     type: "button",
                     text: "새 글쓰기",
-                    click: onCreateClick
+                    click: createArticle
                 }],
-                dataSource: productsDataSource,
-                autoBind: false,
+                dataSource: {
+                    transport: {
+                        read: {
+                            url: "/api/article/list",
+                            dataType: "json",              // 서버에서 받을 데이터 형식
+                            contentType: "application/json", // 데이터를 JSON으로 전송
+                            type: "POST",                  // POST 방식으로 요청
+                            data: function () {
+                                let articleTable = $("#articleTable").data("kendoGrid");
+                                if (articleTable) {
+                                    return JSON.stringify({
+                                        page: articleTable.dataSource.page(),     // 현재 페이지
+                                        pageSize: articleTable.dataSource.pageSize() // 페이지당 항목 수
+                                    });
+                                }
+                                return JSON.stringify({ page: 1, pageSize: 3 });
+                            }
+                        }
+                    },
+                    serverPaging: true,
+                    serverSorting: true,
+                    pageSize: 3,
+                    schema: {
+                        data: "data",
+                        total: "total",
+                        model:{
+                           id: "id",
+                           fields: {
+                               title: { type: "text" },
+                               content:{type: "text" },
+                               memberId:{type: "text" },
+                               createdAt:{type: "date" }
+                           }
+                        }
+                    },
+                },
+                autoBind: true,
                 pageable: true,
-                height: 300,
+                height: 600,
                 selectable: true,
                 columns: [
-                    {field: "id", title: "Id", width: "50px", editable: false},
+                    {field: "id", title: "Id", width: "50px", type: "number"},
                     {
                         field: "title",
                         title: "Title",
@@ -93,16 +112,15 @@
                     }, {
                         field: "createdAt",
                         title: "CreatedAt",
-                        hidden: true,
-                        editable: false
+                        hidden: true
                     },
-                    {field: "memberId", title: "author", width: "100px", editable: false},
+                    {field: "memberId", title: "author", width: "100px", editable: false}
                 ],
                 dataBound: function () {
                     // 데이터 바인딩 후 클릭 이벤트 설정
                     $(".detail-link").on("click", function (e) {
                         var row = $(this).closest("tr"); // 클릭한 링크의 부모 행
-                        var dataItem = $("#grid").data("kendoGrid").dataItem(row); // 해당 행의 데이터 아이템
+                        var dataItem = $("#articleTable").data("kendoGrid").dataItem(row); // 해당 행의 데이터 아이템
 
                         // 세부 정보 페이지로 이동
                         window.location.href = "/article/" + dataItem.id; // 예시 URL
@@ -110,46 +128,45 @@
                 }
             });
 
-            function onCreateClick() {
-                if(loginStatus !== "Y"){
+            function createArticle() {
+                if (!loginMember) {
                     alert("login을 해야 글쓰기를 할 수 있습니다.")
                     return false;
                 }
                 window.location.href = "/article/create";
             }
 
-            $("#login").kendoButton({
+            $("#loginBtn").kendoButton({
                 size: "large",
                 themeColor: "info",
                 rounded: "large",
                 fillMode: "solid"
             });
-            $("#logout").kendoButton({
+            $("#logoutBtn").kendoButton({
                 size: "large",
                 themeColor: "error",
                 rounded: "large",
                 fillMode: "solid"
             });
 
-        });
+        })
 
 
 
     </script>
 </head>
 <body>
-<span id="login-status" th:text="${loginStatus}" hidden></span>
-<div id="example"  style="width: 80%; margin: auto;">
+<div id="example" style="width: 80%; margin: auto;">
     <div>
         <div>
             <h3>게시판</h3>
             <div id="member-button">
-                <button id="login" class="k-button-md">login</button>
-                <div id="welcome_comment" th:text="${loginId}"></div>
-                <button id="logout" class="k-button-solid-primary">logout</button>
+                <button id="loginBtn" class="k-button-md">login</button>
+                <div id="loginId"></div>
+                <button id="logoutBtn" class="k-button-solid-primary">logout</button>
             </div>
         </div>
-        <div id="grid"></div>
+        <div id="articleTable"></div>
     </div>
 
 </div>

@@ -9,8 +9,15 @@
 <!--        <result property="createdAt" column="createdat"/>-->
 
 <!--    </resultMap>-->
-    <select id="findById" resultType="egovframework.example.dto.MemberDto">
+    <select id="findByIdAndPassword" resultType="egovframework.example.dto.MemberDto">
         select * from member where memberid=#{memberId} and memberpassword=#{memberPassword}
+    </select>
+    <insert id="save" parameterType="egovframework.example.dto.MemberDto">
+        INSERT INTO member (memberid, memberpassword, name, email, nickname)
+        VALUES (#{memberId}, #{memberPassword}, #{name}, #{email}, #{nickname})
+    </insert>
+    <select id="findById" resultType="egovframework.example.dto.MemberDto">
+        select * from member where memberid=#{memberId}
     </select>
 
 </mapper>

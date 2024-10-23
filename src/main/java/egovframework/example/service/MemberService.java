@@ -1,11 +1,6 @@
 package egovframework.example.service;
 
-import egovframework.example.dao.MemberDao;
 import egovframework.example.dto.MemberDto;
-import org.springframework.stereotype.Service;
-
-import javax.inject.Inject;
-import javax.transaction.Transactional;
 
 
 /**
@@ -22,21 +17,8 @@ import javax.transaction.Transactional;
  * </pre>
  */
 
-@Service
-@Transactional
-public class MemberService {
+public interface MemberService {
 
-
-    private final MemberDao memberDao;
-
-
-    public MemberService(MemberDao memberDao) {
-        this.memberDao = memberDao;
-    }
-
-    public MemberDto getMemberById(String memberId, String memberPassword){
-        return memberDao.findById(memberId, memberPassword);
-    }
-
-
+    public void signUpMember(MemberDto memberDto) throws Exception;
+    public String loginMember(String memberId, String memberPassword);
 }

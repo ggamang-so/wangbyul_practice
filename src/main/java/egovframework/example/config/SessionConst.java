@@ -1,5 +1,5 @@
 package egovframework.example.config;
 
-public class SsessionConst {
+public class SessionConst {
     public static final String LOGIN_MEMBER = "loginMember";
 }

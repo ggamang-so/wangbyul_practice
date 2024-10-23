@@ -28,6 +28,9 @@ import java.time.LocalDateTime;
 public class MemberDto {
     private String memberId;
     private String memberPassword;
+    private String name;
+    private String email;
+    private String nickname;
     private LocalDateTime createdAt;
 
 }

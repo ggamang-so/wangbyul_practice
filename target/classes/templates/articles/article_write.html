@@ -1,64 +1,169 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>Article_editor</title>
-  <script src="/static/js/jquery-3.7.1.min.js"></script>
-  <script src="/static/kendo/js/kendo.all.min.js"></script>
-  <!--  한글화 -->
-  <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
-  <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Article_editor</title>
+    <link href="/static/kendo/css/common.css" rel="stylesheet"/>
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/kendo/js/kendo.all.min.js"></script>
+    <!--  한글화 -->
+    <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
-        #content {
+
+        #write_container {
             width: 80%;
-            height: 50%;
+            height: 70%;
+            margin: 0 auto;
+            padding-top: 100px;
+        }
+        .k-input-solid {
+            --kendo-input-border : #bbbbbb
+        }
+        .k-button-solid-base{
+            --kendo-button-border: #bbbbbb
+        }
+        .k-picker-solid{
+            --kendo-picker-border: #bbbbbb
         }
     </style>
 </head>
 <body>
-<form id="article_write_form" action="/article/writeOk" method="post">
+<div id="write_container">
+    <form id="article_write_form" action="/article/writeOk" method="post">
+    </form>
+</div>
+
+<script th:inline="javascript">
+
+    $(function () {
+        let loginMember =  /*[[${member}]]*/ {};
+        let memberid = loginMember.memberId;
+
+        $("#article_write_form").kendoForm({
+            orientation: "vertical",
+            formData: {
+                title: "",
+                content: "",
+                memberId: memberid
+            },
+            items: [{
+                field: "title",
+                label: "Title",
+                validation: {required: true}
+            }, {
+                field: "content",
+                label: "Content",
+                editor: function (container, options) {
+                    let textarea = $("<textarea id='content' name=" + options.field + " rows='50' cols='10' style='width:100%; height:600px' aria-label='editor'> </textarea>")
+                        .appendTo(container);
+                    textarea.kendoTextArea(); // This initializes it as a Kendo TextArea
+                    kendo.bind(textarea, options.model);
+                }
+            }, {
+                field: "memberId",
+                label: "Author",
+                validation: {required: true, readOnly: true}
+            }],
+            buttonsTemplate: `
+            <button id="submitBtn" type="submit" >저장하기</button>
+            <button id="cancelBtn" type="button" >취소하기</button>
+        `
+
+        }).submit(function () {
+
+            if (!confirm("글을 저장하시겠습니까??")) {
+                return false;
+            }
+            let form = $("#article_write_form");
+            let formData = new FormData(form);
+            alert(formData);
+        })
 
 
-  <span id="member-id" th:data="${loginId}" th:text="${loginId}" hidden/>
+        $("#cancelBtn").click(function () {
+            if (confirm("취소하시면 지금까지 작성하신 모든 내용을 잃게 됩니다. 정말 취소하시겠습니까?")) {
+                window.location.href = "/";
+            }
+        })
+
+        $("#submitBtn").kendoButton({
+            size: "large",
+            themeColor: "primary",
+            rounded: "large",
+            fillMode: "solid"
+        });
+        $("#cancelBtn").kendoButton({
+            size: "large",
+            themeColor: "base",
+            rounded: "large",
+            fillMode: "solid"
+        });
 
 
-
-</form>
-
-<script>
-
-  $(function () {
-    let memberid = $("#member-id").text();
-
-    $("#article_write_form").kendoForm({
-      orientation: "vertical",
-      formData: {
-        title: "",
-        content: "",
-        memberId: memberid
-      },
-      items: [{
-        field: "title",
-        label: "Title",
-        validation: {required: true}
-      }, {
-        field: "content",
-        label: "Content"
-      },{
-        field: "memberId",
-        label: "Author",
-        validation: { required: true, readOnly: true }
-      }]
-    }).submit(function(){
-      if(!confirm("글을 저장하시겠습니까??")){
-        return false;
-      }
-      let form = $("#article_write_form");
-      let formData = new FormData(form);
-      console.log(formData);
-      return false;
+        $("#content").kendoEditor({
+            tools: [
+                "undo",
+                "redo",
+                {name: "separator1", type: "separator"},
+                {
+                    name: "fontName",
+                    items: [
+                        {text: "Andale Mono", value: "\"Andale Mono\""}, // Font-family names composed of several words should be wrapped in \" \"
+                        {text: "Arial", value: "Arial"},
+                        {text: "Arial Black", value: "\"Arial Black\""},
+                        {text: "Book Antiqua", value: "\"Book Antiqua\""},
+                        {text: "Comic Sans MS", value: "\"Comic Sans MS\""},
+                        {text: "Courier New", value: "\"Courier New\""},
+                        {text: "Georgia", value: "Georgia"},
+                        {text: "Helvetica", value: "Helvetica"},
+                        {text: "Impact", value: "Impact"},
+                        {text: "Symbol", value: "Symbol"},
+                        {text: "Tahoma", value: "Tahoma"},
+                        {text: "Terminal", value: "Terminal"},
+                        {text: "Times New Roman", value: "\"Times New Roman\""},
+                        {text: "Trebuchet MS", value: "\"Trebuchet MS\""},
+                        {text: "Verdana", value: "Verdana"},
+                    ]
+                },
+                "fontSize",
+                "bold",
+                "italic",
+                "underline",
+                "backColor",
+                "foreColor",
+                {name: "separator2", type: "separator"},
+                "insertUnorderedList",
+                "justifyLeft",
+                "justifyCenter",
+                "justifyRight",
+                {name: "separator3", type: "separator"},
+                "formatting",
+                {name: "separator4", type: "separator"},
+                "createLink",
+                "unlink",
+                "insertImage",
+                {name: "separator5", type: "separator"},
+                "tableWizard",
+                "tableProperties",
+                "tableCellProperties",
+                "createTable",
+                "addRowAbove",
+                "addRowBelow",
+                "addColumnLeft",
+                "addColumnRight",
+                "deleteRow",
+                "deleteColumn",
+                "mergeCellsHorizontally",
+                "mergeCellsVertically",
+                "splitCellHorizontally",
+                "splitCellVertically",
+                "tableAlignLeft",
+                "tableAlignCenter",
+                "tableAlignRight"
+            ]
+        });
     })
-  })
-    </script>
+</script>
 </body>
 </html>

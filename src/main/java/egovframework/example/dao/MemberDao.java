@@ -6,5 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface MemberDao {
 
-    MemberDto findById(String memberId, String memberPassword);
+    MemberDto findByIdAndPassword(String memberId, String memberPassword);
+    MemberDto findById(String memberId);
+    void save(MemberDto memberDto);
 }

@@ -1,7 +1,8 @@
-package egovframework.example.service;
+package egovframework.example.service.serviceImpl;
 
 import egovframework.example.dao.ArticleDao;
 import egovframework.example.dto.ArticleDto;
+import egovframework.example.service.ArticleService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,11 @@ import java.util.List;
 
 
 @Service
-public class ArticleService {
+public class ArticleServiceImpl implements ArticleService {
 
     private final ArticleDao articleDao;
 
-    public ArticleService(ArticleDao articleDao) {
+    public ArticleServiceImpl(ArticleDao articleDao) {
         this.articleDao = articleDao;
     }
 
@@ -62,18 +63,18 @@ public class ArticleService {
 
     }
     //게시글 등록
-    public int saveArticle(ArticleDto article) {
+    public ArticleDto saveArticle(ArticleDto article) {
         String content = article.getContent();
         article.setContent(content);
         articleDao.save(article);
-        return articleDao.returningId();
+        return articleDao.findById(articleDao.returningId());
     }
     //게시글 수정
-    public void updateArticle(ArticleDto article) {
+    public ArticleDto updateArticle(ArticleDto article) {
         articleDao.update(article);
-
+        return articleDao.findById(article.getId());
     }
-    // 게시글 삭제
+    // 게시글 총 갯수
     public int getTotalArticleCount() {
         return articleDao.totalArticleCount();
     }

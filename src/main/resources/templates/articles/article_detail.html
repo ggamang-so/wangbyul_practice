@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Article_detail</title>
+    <link href="/static/kendo/css/common.css" rel="stylesheet"/>
     <script src="/static/js/jquery-3.7.1.min.js"></script>
     <script src="/static/kendo/js/kendo.all.min.js"></script>
     <!--  한글화 -->
@@ -13,52 +14,139 @@
             width: 80%;
             height: 50%;
         }
+
+        #article_detail {
+            width: 80%;
+            margin: 0 auto;
+            padding: 10px;
+
+        }
+        #buttons{
+            display: flex;
+        }
+        ul {
+            list-style: none;
+            border-bottom: 1px solid #848282;
+            display: flex;
+            align-items: center;
+            height: fit-content;
+            margin: 0;
+            padding:0;
+        }
+
+        li {
+            margin-right: 10px;
+            line-height: 50px;
+            height: 100%;
+        }
+
+        li:first-child{
+            width:110px;
+            font-weight: bold;
+            align-items: center;
+
+            text-align: center;
+
+        }
+        #content_li{
+            align-items: flex-start;
+        }
+        #content {
+            width: 80%;
+            height: 600px;
+            padding: 10px 20px 10px 0;
+        }
     </style>
-    <script>
+    <script th:inline="javascript">
 
-        $(function(){
-            let loginId =$("#login-id").text();
-            let memberId=$("#author").text();
+        $(function () {
 
-            if(loginId!==memberId){
-                $("#article_delete").css("display","none");
-                $("#article_update").css("display","none");
+            let errorMessage = [[${errorMessage}]]
+            if(errorMessage!=null){
+                alert(errorMessage);
             }
 
 
-            let id = $("#id").text();
-            $("#article_update").click(function(){
+            let memberId = [[${article.memberId}]];
+            if([[${member}]]!=null){
+                let loginId = [[${member}]].memberId;
+                if (loginId === memberId ) {
+                    $("#updateBtn").css("display", "block");
+                    $("#deleteBtn").css("display", "block");
+                }
+            }
+
+
+
+
+
+
+
+
+            let id = [[${article.id}]];
+            $("#updateBtn").click(function () {
                 window.location.href = "/article/update/" + id;
             })
-            $("#article_delete").click(function(){
+            $("#deleteBtn").click(function () {
                 window.location.href = "/article/delete/" + id;
             })
+            $("#listBtn").click(function () {
+                window.location.href = "/";
+            })
+            let content = $("#content_before").text();
+            $("#content").html(content);
 
 
+            $("#updateBtn").kendoButton({
+                size: "large",
+                themeColor: "info",
+                rounded: "large",
+                fillMode: "solid"
+            });
+            $("#deleteBtn").kendoButton({
+                size: "large",
+                themeColor: "error",
+                rounded: "large",
+                fillMode: "solid"
+            });
+            $("#listBtn").kendoButton({
+                size: "large",
+                themeColor: "base",
+                rounded: "large",
+                fillMode: "flat"
+            });
 
         })
     </script>
 </head>
 <body>
-    <div id="article_detail" >
-        <span id="login-id" th:data="${loginId}" th:text="${loginId}" hidden></span>
-        <span id="id" th:data="${article.id}" th:text="${article.id}" hidden></span>
-        <div id="title" th:text="${article.title}">
+<div id="article_detail">
+    <ul>
+        <li> 글쓴이</li>
+        <li id="author" th:text="${article.memberId}"></li>
 
-        </div>
-        <div id="author" th:text="${article.memberId}">
-
-        </div>
-        <div id="created-at" th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
-
-        </div>
-        <div id="content" th:text="${article.content}">
-
-        </div>
-
+    </ul>
+    <ul>
+        <li> 작성일시</li>
+        <li id="created-at" th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></li>
+    </ul>
+    <ul>
+        <li>제목</li>
+    <li id="title" th:text="${article.title}">
+    </li>
+    </ul>
+    <ul>
+        <li id="content_li">내용</li>
+        <span id="content_before" th:utext="${article.content}" hidden/>
+        <li id="content"></li>
+    </ul>
+    <div id="buttons">
+        <button id="updateBtn" style="display:none">수정</button>
+        <button id="deleteBtn" style="display:none">삭제</button>
+        <button id="listBtn">목록</button>
     </div>
-        <button id="article_update">수정</button>
-        <button id="article_delete">삭제</button>
+</div>
+
 
 </body>
 </html>
