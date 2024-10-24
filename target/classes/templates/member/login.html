@@ -41,6 +41,11 @@
                         return JSON.stringify(data);
                     }
                 },
+                requestEnd: function(e){
+                    localStorage.setItem("loginId", e.response.memberId);
+                    localStorage.setItem("token", e.response.token);
+                    window.location.href = "/";
+                }
             });
 
             $("#login_submitBtn").kendoButton({
