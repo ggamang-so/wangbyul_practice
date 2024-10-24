@@ -69,13 +69,15 @@
                             data: function () {
                                 let articleTable = $("#articleTable").data("kendoGrid");
                                 if (articleTable) {
-                                    return JSON.stringify({
+                                    return {
                                         page: articleTable.dataSource.page(),     // 현재 페이지
                                         pageSize: articleTable.dataSource.pageSize() // 페이지당 항목 수
-                                    });
+                                    };
                                 }
-                                return JSON.stringify({ page: 1, pageSize: 3 });
+                                return { page: 1, pageSize: 3 };
                             }
+                        },parameterMap: function(data){
+                            return JSON.stringify(data);
                         }
                     },
                     serverPaging: true,

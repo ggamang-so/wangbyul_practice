@@ -19,13 +19,16 @@ public class MemberApiController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@ModelAttribute MemberDto memberDto) throws Exception {
-            memberService.signUpMember(memberDto);
-            return ResponseEntity.ok("회원가입에 성공하였습니다.");
+    public  ResponseEntity<Map<String, Object>> signup(@RequestBody MemberDto memberDto) throws Exception {
+        System.out.println(memberDto.toString());
+        memberService.signUpMember(memberDto);
+        Map<String, Object> map = new HashMap<>();
+        map.put("message", "회원가입에 성공했습니다. 로그인을 진행해주세요");
+        return ResponseEntity.ok(map);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@ModelAttribute MemberDto memberDto) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody MemberDto memberDto) throws Exception {
         System.out.println(memberDto.toString());
         String token = memberService.loginMember(memberDto.getMemberId(), memberDto.getMemberPassword());
         Map<String, Object> map = new HashMap<>();
