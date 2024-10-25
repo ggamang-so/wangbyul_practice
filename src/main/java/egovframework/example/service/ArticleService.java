@@ -31,12 +31,12 @@ public interface ArticleService {
     public ArticleDto getArticle(String memberId, int id);
 
     // 게시글 1개 삭제 - 게시글 작성자와 session 로그인 아이디와 일치시 삭제 - 로직 고도화 필요
-    public void deleteArticle(String memberId, int id) ;
+    public void deleteArticle(int id) ;
 
     //게시글 등록
     public ArticleDto saveArticle(ArticleDto article);
     //게시글 수정
-    public ArticleDto updateArticle(ArticleDto article);
+    public void updateArticle(ArticleDto article);
     // 게시글 삭제
     public int getTotalArticleCount() ;
 }

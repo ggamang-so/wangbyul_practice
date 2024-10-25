@@ -54,13 +54,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     // 게시글 1개 삭제 - 게시글 작성자와 session 로그인 아이디와 일치시 삭제 - 로직 고도화 필요
     @Transactional
-    public void deleteArticle(String memberId, int id) {
-        System.out.println(memberId);
-        if(articleDao.findById(id).getMemberId().equals(memberId)){
+    public void deleteArticle(int id) {
             articleDao.deleteById(id);
-        }
-        // 로그인된 memberId와 게시글 작성자 memberId 일치 하지 않을 경우, 예외처리 추가
-
     }
     //게시글 등록
     public ArticleDto saveArticle(ArticleDto article) {
@@ -70,12 +65,14 @@ public class ArticleServiceImpl implements ArticleService {
         return articleDao.findById(articleDao.returningId());
     }
     //게시글 수정
-    public ArticleDto updateArticle(ArticleDto article) {
-        articleDao.update(article);
-        return articleDao.findById(article.getId());
+    public void updateArticle(ArticleDto articleDto) {
+        System.out.println("log : update article dto -> " + articleDto.toString());
+        articleDao.update(articleDto);
+
     }
     // 게시글 총 갯수
     public int getTotalArticleCount() {
         return articleDao.totalArticleCount();
     }
 }
+

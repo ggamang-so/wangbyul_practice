@@ -61,40 +61,61 @@
 
         $(function () {
 
-            let errorMessage = [[${errorMessage}]]
-            if(errorMessage!=null){
-                alert(errorMessage);
-            }
+            let loginId = localStorage.getItem("loginId");
+            let id = [[${id}]]
+            console.log(id);
+            let memberId;
 
 
-            let memberId = [[${article.memberId}]];
-            if([[${member}]]!=null){
-                let loginId = [[${member}]].memberId;
-                if (loginId === memberId ) {
-                    $("#updateBtn").css("display", "block");
-                    $("#deleteBtn").css("display", "block");
+
+
+
+            let detail_url = "/api/article/" + encodeURIComponent(id);
+            let detail_dataSource = new kendo.data.DataSource({
+                transport:{
+                    read:{
+                        url: detail_url,
+                        type: "GET",
+                        headers: {
+                            "Authorization": "Bearer "+ localStorage.getItem("token")
+                        },
+                        contentType: "application/json"
+                    }
+                },requestEnd:function(e){
+                    let result = e.response
+                    console.log(result)
+                    memberId = result["memberId"];
+                    $("#title").text(result["title"]);
+                    $("#content").html(result["content"]);
+                    $("#memberId").text(result["memberId"]);
+                    $("#createdAt").text(result["createdAt"]);
+
+                    if(loginId!=null && memberId===loginId){
+                        $("#updateBtn").css("display", "block");
+                        $("#deleteBtn").css("display", "block");
+                    }
                 }
+            });
+            detail_dataSource.read();
+
+            function deleteArticle(id){
+                let delete_dataSource = new kendo.data.DataSource({
+                    transport:{
+                        read:{
+                            url: "/api/article/delete/" + encodeURIComponent(id),
+                            type: "GET",
+                            contentType: "application/json",
+                            headers: {"Authorization": "Bearer "+ localStorage.getItem("token")}
+                        }
+                    },requestEnd: function(){
+                            window.location.reload();
+                            window.parent.closeDialog();
+
+                    }
+                })
+                delete_dataSource.read();
             }
 
-
-
-
-
-
-
-
-            let id = [[${article.id}]];
-            $("#updateBtn").click(function () {
-                window.location.href = "/article/update/" + id;
-            })
-            $("#deleteBtn").click(function () {
-                window.location.href = "/article/delete/" + id;
-            })
-            $("#listBtn").click(function () {
-                window.location.href = "/";
-            })
-            let content = $("#content_before").text();
-            $("#content").html(content);
 
 
             $("#updateBtn").kendoButton({
@@ -102,18 +123,27 @@
                 themeColor: "info",
                 rounded: "large",
                 fillMode: "solid"
+            }).click(function(){
+                window.parent.updateForm(id);
+
             });
             $("#deleteBtn").kendoButton({
                 size: "large",
                 themeColor: "error",
                 rounded: "large",
                 fillMode: "solid"
+            }).click(function(){
+                deleteArticle(id)
             });
             $("#listBtn").kendoButton({
                 size: "large",
                 themeColor: "base",
                 rounded: "large",
                 fillMode: "flat"
+            }).click(function(){
+                window.parent.location.reload()
+                window.parent.closeDialog();
+
             });
 
         })
@@ -123,21 +153,20 @@
 <div id="article_detail">
     <ul>
         <li> 글쓴이</li>
-        <li id="author" th:text="${article.memberId}"></li>
+        <li id="memberId"></li>
 
     </ul>
     <ul>
         <li> 작성일시</li>
-        <li id="created-at" th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></li>
+        <li id="createdAt"></li>
     </ul>
     <ul>
         <li>제목</li>
-    <li id="title" th:text="${article.title}">
+    <li id="title">
     </li>
     </ul>
     <ul>
         <li id="content_li">내용</li>
-        <span id="content_before" th:utext="${article.content}" hidden/>
         <li id="content"></li>
     </ul>
     <div id="buttons">

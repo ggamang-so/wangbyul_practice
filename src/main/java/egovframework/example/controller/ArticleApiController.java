@@ -1,14 +1,13 @@
 package egovframework.example.controller;
 
-import egovframework.example.config.SessionConst;
 import egovframework.example.dto.ArticleDto;
 import egovframework.example.service.ArticleService;
+import egovframework.example.service.JwtService;
+import egovframework.example.service.serviceImpl.JwtServiceImpl;
 import egovframework.example.vo.PageVo;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +18,11 @@ import java.util.Map;
 public class ArticleApiController {
 
     private final ArticleService articleService;
+    private final JwtService jwtService;
 
-    public ArticleApiController(ArticleService articleService) {
+    public ArticleApiController(ArticleService articleService, JwtService jwtService) {
         this.articleService = articleService;
+        this.jwtService = jwtService;
     }
 
     // 게시글 전체 조회
@@ -42,20 +43,37 @@ public class ArticleApiController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ArticleDto> saveArticle(ArticleDto articleDto) {
+    public ResponseEntity<ArticleDto> saveArticle(@RequestBody ArticleDto articleDto) {
         ArticleDto savedArticle = articleService.saveArticle(articleDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedArticle);
     }
 
     // 게시글 1개 조회
     @GetMapping("/{id}")
-    public ResponseEntity<ArticleDto> getArticle(@PathVariable("id") int id, @RequestHeader("Authorization") String token ) {
+    public ResponseEntity<ArticleDto> getArticle(@PathVariable("id") int id, @RequestHeader("Authorization") String tokenWithBearer) {
         ArticleDto article = articleService.getArticle(id);
-//        mav.addObject("member", session.getAttribute(SessionConst.LOGIN_MEMBER));
-//        mav.setViewName("articles/article_detail");
         return ResponseEntity.ok(article);
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateArticle(@RequestBody ArticleDto articleDto, @RequestHeader("Authorization") String tokenWithBearer) {
+        System.out.println("received Article(update) : " + articleDto.toString());
+        articleService.updateArticle(articleDto);
+        Map<String, Object> map = new HashMap<>();
+        map.put("message", "게시글이 수정되었습니다.");
+        return ResponseEntity.ok(map);
+    }
+
+    @GetMapping("/delete/{id}")
+    public ResponseEntity<String> deleteArticle(@PathVariable("id") int id, @RequestHeader("Authorization") String tokenWithBearer) {
+        String token = tokenWithBearer.replace("Bearer ", "");
+        System.out.println(token);
+        if(!jwtService.validateToken(token, articleService.getArticle(id).getMemberId())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("접근권한이 없습니다. 로그인을 확인해주세요.");
+        }
+            articleService.deleteArticle(id);
+            return ResponseEntity.ok("삭제가 완료되었습니다.");
+    }
 
 
 }

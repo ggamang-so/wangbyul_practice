@@ -25,39 +25,72 @@
         }
     </style>
     <script th:inline="javascript">
-        $(function () {
-            let errorMessage = [[${errorMessage}]]
-            if(errorMessage!=null){
-                alert(errorMessage);
+        function getArticle(value){
+            closeDialog()
+            window.loadArticleDialog("/article/"+encodeURIComponent(value))
+        }
+
+        function updateForm(value){
+            closeDialog()
+            window.loadArticleDialog("/article/update/"+encodeURIComponent(value));
+        }
+
+        function parseJwt(token) {
+            try {
+                return JSON.parse(atob(token.split('.')[1]));  // JWT의 payload 부분을 디코딩
+            } catch (e) {
+                return null;
             }
+        }
+
+        function isTokenExpired(token) {
+            const decodedToken = parseJwt(token);
+            if (!decodedToken || !decodedToken.exp) {
+                return true;  // 토큰이 없거나 만료 시간이 없으면 만료로 처리
+            }
+            const currentTime = Date.now() / 1000;  // 현재 시간을 초 단위로 변환
+            return decodedToken.exp < currentTime;  // 만료 시간을 현재 시간과 비교
+        }
+
+        // 로그인 상태 확인 로직
+        function checkLoginStatus() {
+            const token = localStorage.getItem("token");
+            if (!token || isTokenExpired(token)) {
+                logout();
+                // 토큰이 없거나 만료된 경우
+                return {isLoggedIn: false};
+            }
+            // 유효한 토큰이 있는 경우
+            return {isLoggedIn: true, loginId: localStorage.getItem("loginId")};
+        }
+        const loginStatus = checkLoginStatus();
+        let page_url;
+
+        function logout() {
+            localStorage.removeItem("loginId");
+            localStorage.removeItem("token");
+        }
 
 
-            let loginMember =  /*[[${member}]]*/ {};
-
-            if (loginMember) {
+        $(function(){
+            if (loginStatus.isLoggedIn) {
                 $("#loginBtn").css("display", "none");
                 $("#logoutBtn").css("display", "block");
-                $("#loginId").text(loginMember.memberId).css("display", "block");
-            } else if (!loginMember) {
+                $("#loginId").css("display", "block").text(loginStatus.loginId + "님 환영합니다.");
+            } else {
                 $("#loginBtn").css("display", "block");
                 $("#logoutBtn").css("display", "none");
                 $("#loginId").css("display", "none");
             }
 
-            $("#loginBtn").click(function () {
-                window.location.href = "/login";
-            })
-            $("#logoutBtn").click(function () {
-                if (confirm("로그아웃 하시겠습니까?")) {
-                    window.location.href = "/logout";
-                }
-            })
+
+
 
             $("#articleTable").kendoGrid({
                 toolbar: [{
                     type: "button",
                     text: "새 글쓰기",
-                    click: createArticle
+                    click: openNewArticle
                 }],
                 dataSource: {
                     transport: {
@@ -74,9 +107,9 @@
                                         pageSize: articleTable.dataSource.pageSize() // 페이지당 항목 수
                                     };
                                 }
-                                return { page: 1, pageSize: 3 };
+                                return {page: 1, pageSize: 3};
                             }
-                        },parameterMap: function(data){
+                        }, parameterMap: function (data) {
                             return JSON.stringify(data);
                         }
                     },
@@ -86,14 +119,14 @@
                     schema: {
                         data: "data",
                         total: "total",
-                        model:{
-                           id: "id",
-                           fields: {
-                               title: { type: "text" },
-                               content:{type: "text" },
-                               memberId:{type: "text" },
-                               createdAt:{type: "date" }
-                           }
+                        model: {
+                            id: "id",
+                            fields: {
+                                title: {type: "text"},
+                                content: {type: "text"},
+                                memberId: {type: "text"},
+                                createdAt: {type: "date"}
+                            }
                         }
                     },
                 },
@@ -106,7 +139,7 @@
                     {
                         field: "title",
                         title: "Title",
-                        template: '<a href="javascript:void(0)" class="detail-link">#: title #</a>'
+                        template: "<a href='\\#' class='article-link' data-id='#= id #'>#= title #</a>"
                     }, {
                         field: "content",
                         title: "Content",
@@ -117,41 +150,144 @@
                         hidden: true
                     },
                     {field: "memberId", title: "author", width: "100px", editable: false}
-                ],
-                dataBound: function () {
-                    // 데이터 바인딩 후 클릭 이벤트 설정
-                    $(".detail-link").on("click", function (e) {
-                        var row = $(this).closest("tr"); // 클릭한 링크의 부모 행
-                        var dataItem = $("#articleTable").data("kendoGrid").dataItem(row); // 해당 행의 데이터 아이템
-
-                        // 세부 정보 페이지로 이동
-                        window.location.href = "/article/" + dataItem.id; // 예시 URL
-                    })
-                }
+                ]
             });
 
-            function createArticle() {
-                if (!loginMember) {
-                    alert("login을 해야 글쓰기를 할 수 있습니다.")
-                    return false;
+            let selectedArticledId;
+
+            $("#articleTable").on("click", ".article-link", function (e) {
+                e.preventDefault();
+                selectedArticledId = $(this).data("id");
+                console.log(selectedArticledId)
+                page_url = "/article/" + encodeURIComponent(selectedArticledId);
+                loadArticleDialog(page_url);
+            });
+
+            function openNewArticle(){
+                if(loginStatus.isLoggedIn){
+                    loadArticleDialog("/article/create");
+                }else{
+                    alert("로그인 해야 게시글을 작성할 수 있습니다.");
                 }
-                window.location.href = "/article/create";
+
+
             }
 
+
+           window.loadArticleDialog =function(page_url){
+                let article_datasource = new kendo.data.DataSource({
+                    transport: {
+                        read: {
+                            url: page_url,
+                            dataType: "html",
+                            type: "GET"
+                        }
+                    },
+                    requestEnd: function(data) {
+                        let articleContent = data.response;  // 서버에서 받은 HTML 컨텐츠
+
+                        if (articleContent) {
+                            // 다이얼로그 내용 설정 후 다이얼로그 열기
+                            $("#article_detail_dialog").html(articleContent);
+                            articleDialog.open();
+                            setTimeout(centerDialog, 100);
+                        } else {
+                            alert("게시글 내용을 불러오지 못했습니다.");
+                        }
+
+                    }
+                });
+                article_datasource.read();
+            }
+
+
+
+
+
+            // ***************    게시글 디테일 관련 ******************
+            let articleDialog = $("#article_detail_dialog").kendoDialog({
+                width: "800px",
+                visible: false,
+                title: "게시글",
+                closable: true,
+                modal: true,
+
+                close: function () {
+                    $("#article_detail_dialog").html("");
+                },
+                open: function() {
+                    centerDialog();  // 다이얼로그가 열린 후 100ms 후에 위치를 중앙으로 맞춤
+                }
+            }).data("kendoDialog");
+
+            function centerDialog() {
+                let dialogElement = $("#article_detail_dialog").closest(".k-window");  // 다이얼로그의 wrapper를 가져옴
+
+                let windowHeight = $(window).height();  // 브라우저 창의 높이
+                let dialogHeight = dialogElement.outerHeight();  // 다이얼로그의 높이
+
+                // 중앙에 배치하기 위한 top 값을 계산
+                let top = (windowHeight - dialogHeight) / 2;
+
+                // 다이얼로그의 top 위치를 중앙으로 수동 설정
+                dialogElement.css({
+                    "top": top + "px",
+                    "position": "fixed"
+                });
+            }
+
+            // article_list buttons
             $("#loginBtn").kendoButton({
                 size: "large",
                 themeColor: "info",
                 rounded: "large",
                 fillMode: "solid"
+            }).click(function () {
+                window.location.href = "/login";
             });
+
             $("#logoutBtn").kendoButton({
                 size: "large",
                 themeColor: "error",
                 rounded: "large",
                 fillMode: "solid"
+            }).click(function () {
+                if (confirm("로그아웃 하시겠습니까?")) {
+                    logout();
+                    window.location.reload();
+                }
             });
 
-        })
+            // article_write buttons
+
+
+
+
+
+            // article_editor buttons
+
+
+
+
+            // article_detail내 buttons
+            $("#updateBtn").click(function () {
+                $("#article_detail_dialog").html("");
+                loadArticleDialog("/article/update/"+selectedArticledId);
+            })
+            $("#deleteBtn").click(function () {
+                window.location.href = "/article/delete/" + id;
+            })
+            $("#listBtn").click(function () {
+                window.location.href = "/";
+            })
+
+
+            window.closeDialog = function(){
+                $("#article_detail_dialog").html("");
+                articleDialog.close();
+                console.log("closeDialog");
+            }
+        });
 
 
 
@@ -162,10 +298,11 @@
     <div>
         <div>
             <h3>게시판</h3>
+            <div id="article_detail_dialog"></div>
             <div id="member-button">
-                <button id="loginBtn" class="k-button-md">login</button>
+                <button id="loginBtn">login</button>
                 <div id="loginId"></div>
-                <button id="logoutBtn" class="k-button-solid-primary">logout</button>
+                <button id="logoutBtn">logout</button>
             </div>
         </div>
         <div id="articleTable"></div>

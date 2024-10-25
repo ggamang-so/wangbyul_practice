@@ -37,15 +37,30 @@
 <script th:inline="javascript">
 
     $(function () {
-        let loginMember =  /*[[${member}]]*/ {};
-        let memberid = loginMember.memberId;
+        let loginMember =  localStorage.getItem("loginId");
+        console.log(loginMember);
+
+        let write_dataSource = new kendo.data.DataSource({
+            transport:{
+                read:{
+                    url: "/api/article/create",
+                    dataType: "json",
+                    contentType: "application/json",
+                    type: "POST"
+                },parameterMap: function (data) {
+                    return JSON.stringify(data);
+                }
+            },requestEnd: function(e){
+               window.parent.getArticle(e.response.id);
+            }
+        });
 
         $("#article_write_form").kendoForm({
             orientation: "vertical",
             formData: {
                 title: "",
                 content: "",
-                memberId: memberid
+                memberId: loginMember,
             },
             items: [{
                 field: "title",
@@ -66,34 +81,31 @@
                 validation: {required: true, readOnly: true}
             }],
             buttonsTemplate: `
-            <button id="submitBtn" type="submit" >저장하기</button>
-            <button id="cancelBtn" type="button" >취소하기</button>
+            <button id="create_submitBtn" type="button" >저장하기</button>
+            <button id="create_cancelBtn" type="button" >취소하기</button>
         `
+        });
 
-        }).submit(function () {
+        function submitForm(){
+            console.log("submitForm Called");
+            let formData = $("#article_write_form").serializeArray();
+            let dataObject = {};
+            formData.forEach(function(item) {
+                dataObject[item.name] = item.value;
+            });
+            write_dataSource.read(dataObject);
+        }
 
-            if (!confirm("글을 저장하시겠습니까??")) {
-                return false;
-            }
-            let form = $("#article_write_form");
-            let formData = new FormData(form);
-            alert(formData);
-        })
-
-
-        $("#cancelBtn").click(function () {
-            if (confirm("취소하시면 지금까지 작성하신 모든 내용을 잃게 됩니다. 정말 취소하시겠습니까?")) {
-                window.location.href = "/";
-            }
-        })
-
-        $("#submitBtn").kendoButton({
+        $("#create_submitBtn").kendoButton({
             size: "large",
             themeColor: "primary",
             rounded: "large",
             fillMode: "solid"
+        }).click(function(){
+            submitForm()
+
         });
-        $("#cancelBtn").kendoButton({
+        $("#create_cancelBtn").kendoButton({
             size: "large",
             themeColor: "base",
             rounded: "large",

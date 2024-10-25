@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Article_editor</title>
     <link href="/static/kendo/css/common.css" rel="stylesheet"/>
-<!--    <link href="https://kendo.cdn.telerik.com/themes/9.0.0/default/default-main.css" rel="stylesheet" />-->
+    <!--    <link href="https://kendo.cdn.telerik.com/themes/9.0.0/default/default-main.css" rel="stylesheet" />-->
     <script src="/static/js/jquery-3.7.1.min.js"></script>
     <script src="/static/kendo/js/kendo.all.min.js"></script>
     <!--  한글화 -->
@@ -17,13 +17,16 @@
             margin: 0 auto;
             padding-top: 100px;
         }
+
         .k-input-solid {
-            --kendo-input-border : #bbbbbb
+            --kendo-input-border: #bbbbbb
         }
-        .k-button-solid-base{
+
+        .k-button-solid-base {
             --kendo-button-border: #bbbbbb
         }
-        .k-picker-solid{
+
+        .k-picker-solid {
             --kendo-picker-border: #bbbbbb
         }
     </style>
@@ -32,11 +35,11 @@
 <div id="editor_container">
     <form id="article_editor_form" action="/article/updateOk" method="post">
 
-        <span id="id" th:data="${article.id}" th:text="${article.id}" hidden/>
-        <span id="member-id" th:data="${article.memberId}" th:text="${article.memberId}" hidden/>
-        <span id="title" th:data="${article.title}" th:text="${article.title}" hidden/>
-        <span id="content" th:data="${article.content}" th:text="${article.content}" hidden/>
-        <span id="createdat" th:data="${article.createdAt}" th:text="${article.createdAt}" hidden/>
+        <!--        <span id="id" th:data="${article.id}" th:text="${article.id}" hidden/>-->
+        <!--        <span id="member-id" th:data="${article.memberId}" th:text="${article.memberId}" hidden/>-->
+        <!--        <span id="title" th:data="${article.title}" th:text="${article.title}" hidden/>-->
+        <!--        <span id="content" th:data="${article.content}" th:text="${article.content}" hidden/>-->
+        <!--        <span id="createdat" th:data="${article.createdAt}" th:text="${article.createdAt}" hidden/>-->
 
 
     </form>
@@ -44,147 +47,201 @@
 <script th:inline="javascript">
 
     $(function () {
+        let memberId;
+        let id = [[${id}]]
+        let title;
+        let content;
+        let createdAt;
 
-        let article = [[${article}]];
-        let memberid = article.memberId;
-        let id = article.id;
-        let title = article.title;
-        let content = article.content;
-        let createdat = article.createdAt;
+        let article_detail_dataSource = new kendo.data.DataSource({
+            transport: {
+                read: {
+                    url: function () {
+                        return "/api/article/" + encodeURIComponent(id)
+                    },
+                    type: "GET",
+                    headers: {"Authorization": "Bearer " + localStorage.getItem("token")},
+                    contentType: "application/json",
 
-
-        console.log(title)
-        console.log(content)
-
-        $("#article_editor_form").kendoForm({
-            orientation: "vertical",
-            formData: {
-                id: id,
-                title: title,
-                content: content,
-                memberid: memberid,
-                createdat: createdat
-            },
-            items: [{
-                field: "id",
-                label: "Id",
-                validation: {required: true, readonly: true}
-            }, {
-                field: "title",
-                label: "Title",
-                validation: {required: true}
-            }, {
-                field: "content",
-                label: "Content",
-                editor: function (container, options) {
-                    let textarea = $("<textarea id='content_editor' name=" + options.field + " rows='50' cols='10' style='width:100%; height:600px' aria-label='editor'> </textarea>")
-                        .appendTo(container);
-                    textarea.kendoTextArea(); // This initializes it as a Kendo TextArea
-                    kendo.bind(textarea, options.model);
                 }
-            }, {
-                field: "memberid",
-                label: "Author",
-                validation: {required: true, readonly: true}
-            }, {
-                field: "createdat",
-                label: "Created",
-                validation: {required: true, readonly: true}
-            }],
-            buttonsTemplate: `
-            <button id="submitBtn" type="submit" >저장하기</button>
-            <button id="cancelBtn" type="button" >취소하기</button>
-        `
-        }).submit(function () {
-            if (!confirm("글을 저장하시겠습니까??")) {
-                return false;
-            }
-            let form = $("#article_write_form");
-            let formData = new FormData(form);
-            console.log(formData);
-            return false;
-        })
-        $("#cancelBtn").click(function () {
-            if (confirm("취소하시면 지금까지 작성하신 모든 내용을 잃게 됩니다. 정말 취소하시겠습니까?")) {
-                window.location.href = "/article/"+ id;
-            }
-        })
-        $("#submitBtn").kendoButton({
-            size: "large",
-            themeColor: "primary",
-            rounded: "large",
-            fillMode: "solid"
+            }, requestEnd: function (data) {
+                let result = data.response;
+                console.log(result)
+                memberId = result["memberId"];
+                title = result["title"];
+                content = result["content"];
+                createdAt = result["createdAt"];
+
+                initForm();
+            }, schema: {
+                model: {
+                    id: "id",
+                    fields: {
+                        title: {type: "text"},
+                        content: {type: "text"},
+                        memberId: {type: "text"},
+                        createdAt: {type: "date"}
+                    }
+                }
+            },
         });
-        $("#cancelBtn").kendoButton({
-            size: "large",
-            themeColor: "base",
-            rounded: "large",
-            fillMode: "solid"
-        });
+        article_detail_dataSource.read();
+
+        function updateSubmit(formData) {
+            let update_dataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: "/api/article/update",
+                        dataType: "json",
+                        contentType: "application/json",
+                        type: "POST",
+                        headers: {
+                            "Authorization": "Bearer " + localStorage.getItem("token")
+                        }
+                    }, parameterMap: function (data) {
+                        return JSON.stringify(data);
+                    }
+                }, requestEnd: function (e) {
+                    alert(e.response.message);
+                }
+            });
+            update_dataSource.read(formData)
+        }
 
 
-        $("#content_editor").kendoEditor({
-            tools: [
-                "undo",
-                "redo",
-                {name: "separator1", type: "separator"},
-                {
-                    name: "fontName",
-                    items: [
-                        {text: "Andale Mono", value: "\"Andale Mono\""}, // Font-family names composed of several words should be wrapped in \" \"
-                        {text: "Arial", value: "Arial"},
-                        {text: "Arial Black", value: "\"Arial Black\""},
-                        {text: "Book Antiqua", value: "\"Book Antiqua\""},
-                        {text: "Comic Sans MS", value: "\"Comic Sans MS\""},
-                        {text: "Courier New", value: "\"Courier New\""},
-                        {text: "Georgia", value: "Georgia"},
-                        {text: "Helvetica", value: "Helvetica"},
-                        {text: "Impact", value: "Impact"},
-                        {text: "Symbol", value: "Symbol"},
-                        {text: "Tahoma", value: "Tahoma"},
-                        {text: "Terminal", value: "Terminal"},
-                        {text: "Times New Roman", value: "\"Times New Roman\""},
-                        {text: "Trebuchet MS", value: "\"Trebuchet MS\""},
-                        {text: "Verdana", value: "Verdana"},
-                    ]
+        function initForm() {
+            $("#article_editor_form").kendoForm({
+                orientation: "vertical",
+                formData: {
+                    id: id,
+                    title: title,
+                    content: content,
+                    memberId: memberId,
+                    createdAt: createdAt
                 },
-                "fontSize",
-                "bold",
-                "italic",
-                "underline",
-                "backColor",
-                "foreColor",
-                {name: "separator2", type: "separator"},
-                "insertUnorderedList",
-                "justifyLeft",
-                "justifyCenter",
-                "justifyRight",
-                {name: "separator3", type: "separator"},
-                "formatting",
-                {name: "separator4", type: "separator"},
-                "createLink",
-                "unlink",
-                "insertImage",
-                {name: "separator5", type: "separator"},
-                "tableWizard",
-                "tableProperties",
-                "tableCellProperties",
-                "createTable",
-                "addRowAbove",
-                "addRowBelow",
-                "addColumnLeft",
-                "addColumnRight",
-                "deleteRow",
-                "deleteColumn",
-                "mergeCellsHorizontally",
-                "mergeCellsVertically",
-                "splitCellHorizontally",
-                "splitCellVertically",
-                "tableAlignLeft",
-                "tableAlignCenter",
-                "tableAlignRight"
-            ]
-        });
+                items: [{
+                    field: "id",
+                    label: "Id",
+                    validation: {required: true, readonly: true}
+                }, {
+                    field: "title",
+                    label: "Title",
+                    validation: {required: true}
+                }, {
+                    field: "content",
+                    label: "Content",
+                    editor: function (container, options) {
+                        let textarea = $("<textarea id='content_editor' name=" + options.field + " rows='50' cols='10' style='width:100%; height:600px' aria-label='editor'> </textarea>")
+                            .appendTo(container);
+                        textarea.kendoTextArea(); // This initializes it as a Kendo TextArea
+                        kendo.bind(textarea, options.model);
+                    }
+                }, {
+                    field: "memberId",
+                    label: "Author",
+                    validation: {required: true, readonly: true}
+                }, {
+                    field: "createdAt",
+                    label: "Created",
+                    validation: {required: true, readonly: true}
+                }],
+                buttonsTemplate: `
+            <button id="editor_submitBtn" type="button" >저장하기</button>
+            <button id="editor_cancelBtn" type="button" >취소하기</button>
+        `
+            });
+
+            $("#editor_submitBtn").kendoButton({
+                size: "large",
+                themeColor: "primary",
+                rounded: "large",
+                fillMode: "solid"
+            }).click(function () {
+                let formData = $("#article_editor_form").serializeArray();
+                let dataObject = {};
+                formData.forEach(function (item) {
+                    dataObject[item.name] = item.value;
+                });
+                dataObject["createdAt"]="";
+                updateSubmit(dataObject);
+                console.log("article update complete");
+                window.parent.getArticle(id);
+            });
+            $("#editor_cancelBtn").kendoButton({
+                size: "large",
+                themeColor: "base",
+                rounded: "large",
+                fillMode: "solid"
+            }).click(function(){
+                if(confirm("정말 취소하시겠습니까? 취소하시면 변경 정보를 모두 잃을 수 있습니다.")){
+                    window.parent.getArticle(id);
+                }
+            });
+
+
+            $("#content_editor").kendoEditor({
+                tools: [
+                    "undo",
+                    "redo",
+                    {name: "separator1", type: "separator"},
+                    {
+                        name: "fontName",
+                        items: [
+                            {text: "Andale Mono", value: "\"Andale Mono\""}, // Font-family names composed of several words should be wrapped in \" \"
+                            {text: "Arial", value: "Arial"},
+                            {text: "Arial Black", value: "\"Arial Black\""},
+                            {text: "Book Antiqua", value: "\"Book Antiqua\""},
+                            {text: "Comic Sans MS", value: "\"Comic Sans MS\""},
+                            {text: "Courier New", value: "\"Courier New\""},
+                            {text: "Georgia", value: "Georgia"},
+                            {text: "Helvetica", value: "Helvetica"},
+                            {text: "Impact", value: "Impact"},
+                            {text: "Symbol", value: "Symbol"},
+                            {text: "Tahoma", value: "Tahoma"},
+                            {text: "Terminal", value: "Terminal"},
+                            {text: "Times New Roman", value: "\"Times New Roman\""},
+                            {text: "Trebuchet MS", value: "\"Trebuchet MS\""},
+                            {text: "Verdana", value: "Verdana"},
+                        ]
+                    },
+                    "fontSize",
+                    "bold",
+                    "italic",
+                    "underline",
+                    "backColor",
+                    "foreColor",
+                    {name: "separator2", type: "separator"},
+                    "insertUnorderedList",
+                    "justifyLeft",
+                    "justifyCenter",
+                    "justifyRight",
+                    {name: "separator3", type: "separator"},
+                    "formatting",
+                    {name: "separator4", type: "separator"},
+                    "createLink",
+                    "unlink",
+                    "insertImage",
+                    {name: "separator5", type: "separator"},
+                    "tableWizard",
+                    "tableProperties",
+                    "tableCellProperties",
+                    "createTable",
+                    "addRowAbove",
+                    "addRowBelow",
+                    "addColumnLeft",
+                    "addColumnRight",
+                    "deleteRow",
+                    "deleteColumn",
+                    "mergeCellsHorizontally",
+                    "mergeCellsVertically",
+                    "splitCellHorizontally",
+                    "splitCellVertically",
+                    "tableAlignLeft",
+                    "tableAlignCenter",
+                    "tableAlignRight"
+                ]
+            });
+        }
     })
 </script>
 </body>
