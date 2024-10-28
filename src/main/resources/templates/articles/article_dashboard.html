@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Article List</title>
+    <link href="/static/kendo/css/common.css" rel="stylesheet"/>
+    <link href="/static/css/egovframework/article.css" rel="stylesheet"/>
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/kendo/js/kendo.all.min.js"></script>
+    <!--  한글화 -->
+    <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+
+
+    <script>
+        $(function () {
+            $(".menu_item").kendoButton({
+                themeColor: "base",
+                rounded: "medium",
+
+            })
+
+            $("#tilelayout").kendoTileLayout({
+                containers: [{
+                    colSpan: 2,
+                    rowSpan: 2,
+                    header: {
+                        text: "카테고리 비율"
+                    },
+                    bodyTemplate: kendo.template($("#category-ratio-chart-template").html())
+                }, {
+                    colSpan: 2,
+                    rowSpan: 1,
+                    header: {
+                        text: "카테고리별 게시글 수"
+                    },
+                    bodyTemplate: kendo.template($("#category-bar-chart-template").html())
+                }, {
+                    colSpan: 1,
+                    rowSpan: 1,
+                    header: {
+                        text: "총 게시글수"
+                    },
+                    bodyTemplate: kendo.template($("#total-article-template").html())
+                },{
+                    colSpan: 2,
+                    rowSpan: 1,
+                    header: {
+                        text: "날짜별 게시글 수"
+                    },
+                    bodyTemplate: kendo.template($("#article-day-chart-template").html())
+                }, {
+                    colSpan: 1,
+                    rowSpan: 1,
+                    header: {
+                        text: "작성자 랭킹"
+                    },
+                    bodyTemplate: kendo.template($("#writer-rank-chart-template").html())
+                }, ],
+                columns: 5,
+                columnsWidth: 300,
+                rowsHeight: 235,
+                reorderable: true,
+                resizable: true,
+                resize: function (e) {
+                    let rowSpan = e.container.css("grid-column-end");
+                    let chart = e.container.find(".k-chart").data("kendoChart");
+                    // hide chart labels when the space is limited
+                    if (rowSpan === "span 1" && chart) {
+                        chart.options.categoryAxis.labels.visible = false;
+                        chart.redraw();
+                    }
+                    // show chart labels when the space is enough
+                    if (rowSpan !== "span 1" && chart) {
+                        chart.options.categoryAxis.labels.visible = true;
+                        chart.redraw();
+                    }
+
+                    // for widgets that do not auto resize
+                    // https://docs.telerik.com/kendo-ui/styles-and-layout/using-kendo-in-responsive-web-pages
+                    kendo.resize(e.container, true);
+                }
+
+            })
+
+            let categoryDataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: "/api/article/category/count",
+                        type: "GET",
+                        contentType: "application/json"
+                    }
+                }, schema: {
+                    model: {
+                        field: {
+                            category: {type: "integer"},
+                            categoryDisplayName: {type: "string"},
+                            count: {type: "integer"}
+                        }
+                    }
+                },requestEnd: function(e){
+                    console.log(e.response);
+                }
+            })
+            categoryDataSource.read();
+            $("#category-ratio-chart").kendoChart({
+                data: categoryDataSource,
+                seriesDefaults:{
+                    type: "donut",
+                    startAngle: 150,
+                },series: {
+
+                    field: "count",
+                    categoryField: "categoryDisplayName"
+                }
+                // seriesDefaults:{
+                //     type: "donut",
+                //     startAngle: 0,
+                //     labels:{
+                //         template: "#= categoryDisplayName # - kendo.format('{0:P}', percentage)#",
+                //         position: "outsideEnd",
+                //         visible: true,
+                //         background: "transparent"
+                //     }
+                // },series:{
+                //     data: categoryDataSource,
+                //     field: "count",
+                //     categoryField: "categoryDisplayName"
+                // }
+            })
+
+
+        }) // jquery end
+
+    </script>
+
+</head>
+<body>
+<header id="header">
+    <div id="menu_header">
+        <div class="menu_item"><a href="/">게시판</a></div>
+        <div class="menu_item"><a href="/article/dashboard">통계</a></div>
+    </div>
+    <hr>
+</header>
+<script id="total-article-template" type="text/x-kendo-template">
+    <h3>200</h3>
+    <div>Total Articles</div>
+</script>
+<script id="category-ratio-chart-template" type="text/x-kendo-template">
+    <div id="category-ratio-chart" style="height:100%; width:100%"></div>
+</script>
+<script id="category-bar-chart-template" type="text/x-kendo-template">
+    <div id="category-bar-chart" style="height:100%; width:100%"></div>
+</script>
+<script id="article-day-chart-template" type="text/x-kendo-template">
+    <div id="article-day-chart" style="height:100%; width:100%"></div>
+</script>
+<script id="writer-rank-chart-template" type="text/x-kendo-template">
+    <div id="writer-rank-chart" style="height:100%; width:100%"></div>
+</script>
+
+<div id="tilelayout">
+
+</div>
+
+
+</body>
+</html>

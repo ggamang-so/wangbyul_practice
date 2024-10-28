@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Article List</title>
     <link href="/static/kendo/css/common.css" rel="stylesheet"/>
+    <link href="/static/css/egovframework/article.css" rel="stylesheet"/>
     <script src="/static/js/jquery-3.7.1.min.js"></script>
     <script src="/static/kendo/js/kendo.all.min.js"></script>
     <!--  한글화 -->
@@ -23,6 +24,9 @@
         .k-input-solid {
             --kendo-input-border: #bbbbbb
         }
+
+
+
     </style>
     <script th:inline="javascript">
         function getArticle(value){
@@ -107,7 +111,7 @@
                                         pageSize: articleTable.dataSource.pageSize() // 페이지당 항목 수
                                     };
                                 }
-                                return {page: 1, pageSize: 3};
+                                return {page: 1, pageSize: 10};
                             }
                         }, parameterMap: function (data) {
                             return JSON.stringify(data);
@@ -115,7 +119,7 @@
                     },
                     serverPaging: true,
                     serverSorting: true,
-                    pageSize: 3,
+                    pageSize: 10,
                     schema: {
                         data: "data",
                         total: "total",
@@ -131,7 +135,11 @@
                     },
                 },
                 autoBind: true,
-                pageable: true,
+                pageable: {
+                    refresh: true,
+                    pageSizes: true,
+                    buttonCount: 5
+                },
                 height: 600,
                 selectable: true,
                 columns: [
@@ -287,6 +295,12 @@
                 articleDialog.close();
                 console.log("closeDialog");
             }
+
+            $(".menu_item").kendoButton({
+                themeColor: "base",
+                rounded: "medium",
+
+            })
         });
 
 
@@ -294,10 +308,19 @@
     </script>
 </head>
 <body>
+<header id="header">
+    <div id="menu_header">
+        <div class="menu_item"> <a href="/">게시판</a></div>
+        <div class="menu_item"> <a href="/article/dashboard">통계</a></div>
+    </div>
+    <hr>
+</header>
+
 <div id="example" style="width: 80%; margin: auto;">
     <div>
         <div>
             <h3>게시판</h3>
+
             <div id="article_detail_dialog"></div>
             <div id="member-button">
                 <button id="loginBtn">login</button>

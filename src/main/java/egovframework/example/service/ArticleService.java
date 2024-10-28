@@ -1,6 +1,7 @@
 package egovframework.example.service;
 
 import egovframework.example.dto.ArticleDto;
+import egovframework.example.dto.CategoryDto;
 
 import java.util.List;
 
@@ -39,5 +40,7 @@ public interface ArticleService {
     public void updateArticle(ArticleDto article);
     // 게시글 삭제
     public int getTotalArticleCount() ;
+    //카테고리별 게시글 갯수
+    public List<CategoryDto> getCountArticleCategory();
 }
 

@@ -36,5 +36,8 @@
     <update id="update" parameterType="egovframework.example.dto.ArticleDto">
         update article set title=#{title}, content=#{content}, category=#{categoryValue}, start_date= #{startDate}, end_date=#{endDate} where id=#{id}
     </update>
+    <select id="articleCountPerCategory" resultType="egovframework.example.dto.CategoryDto">
+        select category, count(*) AS count from article group by category order by category
+    </select>
 
 </mapper>

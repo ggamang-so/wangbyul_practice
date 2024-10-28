@@ -3,6 +3,7 @@ package egovframework.example.service.serviceImpl;
 import egovframework.example.Const.Category;
 import egovframework.example.dao.ArticleDao;
 import egovframework.example.dto.ArticleDto;
+import egovframework.example.dto.CategoryDto;
 import egovframework.example.service.ArticleService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,6 +79,11 @@ public class ArticleServiceImpl implements ArticleService {
     // 게시글 총 갯수
     public int getTotalArticleCount() {
         return articleDao.totalArticleCount();
+    }
+
+    @Override
+    public List<CategoryDto> getCountArticleCategory() {
+        return articleDao.articleCountPerCategory();
     }
 }
 
