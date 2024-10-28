@@ -57,7 +57,7 @@
                     }
                 },
                 {
-                    field: "memberPassword",
+                    field: "memberPw",
                     label: "Password",
                     validation: {
                         required: true,
@@ -101,6 +101,13 @@
                         type: "email",
                     }
                 },{
+                    field: "birthday",
+                    label: "Birthday",
+                    validation: {
+                        required: true,
+                        type: "date"
+                    }
+                },{
                     field: "nickname",
                     label: "Nick Name",
 
@@ -113,7 +120,7 @@
                 orientation: "vertical",
                 formData: {
                     memberId: "",
-                    memberPassword: ""
+                    memberPw: ""
                 },
                 items: formFields,
                 buttonsTemplate:

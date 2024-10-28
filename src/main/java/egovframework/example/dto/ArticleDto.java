@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author : ggamangso
@@ -30,7 +32,11 @@ public class ArticleDto {
     private String title;
     private String content;
     private String memberId;
-    private LocalDateTime createdAt;
+    private String category;
+    private int categoryValue;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalDate createdAt;
     private boolean isAuthor;
 
 }

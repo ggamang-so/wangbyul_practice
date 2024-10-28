@@ -1,19 +1,11 @@
 package egovframework.example.controller;
 
-import egovframework.example.config.SessionConst;
-import egovframework.example.dto.ArticleDto;
-import egovframework.example.dto.MemberDto;
 import egovframework.example.service.ArticleService;
 import egovframework.example.service.JwtService;
-import jakarta.annotation.Nullable;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * @author : ggamangso
@@ -32,9 +24,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 @Controller
 public class ArticleController {
-
-    private final ArticleService articleService;
-    private final JwtService jwtService;
 
     //게시글 목록 페이지
     @GetMapping("/")

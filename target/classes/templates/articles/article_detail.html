@@ -69,7 +69,7 @@
 
 
 
-
+            let transForm_dataSource=[];
             let detail_url = "/api/article/" + encodeURIComponent(id);
             let detail_dataSource = new kendo.data.DataSource({
                 transport:{
@@ -83,12 +83,16 @@
                     }
                 },requestEnd:function(e){
                     let result = e.response
-                    console.log(result)
                     memberId = result["memberId"];
-                    $("#title").text(result["title"]);
-                    $("#content").html(result["content"]);
-                    $("#memberId").text(result["memberId"]);
-                    $("#createdAt").text(result["createdAt"]);
+                    transForm_dataSource.push({field : "글쓴이", value: result["memberId"]});
+                    transForm_dataSource.push({field : "작성일시", value: result["createdAt"]});
+                    transForm_dataSource.push({field : "제목", value: result["title"]});
+                    transForm_dataSource.push({field : "시작일", value: result["startDate"]});
+                    transForm_dataSource.push({field : "종료일", value: result["endDate"]});
+                    transForm_dataSource.push({field : "카테고리", value: result["category"]});
+                    transForm_dataSource.push({field : "내용", value: result["content"]});
+
+                    article_grid();
 
                     if(loginId!=null && memberId===loginId){
                         $("#updateBtn").css("display", "block");
@@ -97,6 +101,28 @@
                 }
             });
             detail_dataSource.read();
+            function article_grid(){
+                $("#article_grid").kendoGrid({
+                    dataSource: transForm_dataSource,
+                    columns:[
+                        {field: "field", width: "30%",
+                            headerAttributes: { style: "display:none;" },
+                            attributes: {
+                                style: "background-color: #143b60; text-align: center; font-weight: bold; color: white" // 셀 스타일
+                            }
+                        },
+                        {field: "value", width: "70%", headerAttributes: { style: "display:none;" }}
+                    ],
+                    editable: "popup",
+                    scrollable: false,
+                    dataBound: function(e) {
+                        let lastRow = e.sender.tbody.find("tr").last(); // 마지막 행 선택
+                        lastRow.css("height", "300px"); // 원하는 높이로 설정
+                    }
+                });
+            }
+
+
 
             function deleteArticle(id){
                 let delete_dataSource = new kendo.data.DataSource({
@@ -151,24 +177,7 @@
 </head>
 <body>
 <div id="article_detail">
-    <ul>
-        <li> 글쓴이</li>
-        <li id="memberId"></li>
-
-    </ul>
-    <ul>
-        <li> 작성일시</li>
-        <li id="createdAt"></li>
-    </ul>
-    <ul>
-        <li>제목</li>
-    <li id="title">
-    </li>
-    </ul>
-    <ul>
-        <li id="content_li">내용</li>
-        <li id="content"></li>
-    </ul>
+    <div id="article_grid"></div>
     <div id="buttons">
         <button id="updateBtn" style="display:none">수정</button>
         <button id="deleteBtn" style="display:none">삭제</button>

@@ -1,5 +1,6 @@
 package egovframework.example.service.serviceImpl;
 
+import egovframework.example.Const.Category;
 import egovframework.example.dao.ArticleDao;
 import egovframework.example.dto.ArticleDto;
 import egovframework.example.service.ArticleService;
@@ -40,7 +41,11 @@ public class ArticleServiceImpl implements ArticleService {
 
     //게시글 1개 조회 - 게시글 ID로
     public ArticleDto getArticle(int id){
-        return articleDao.findById(id);
+        ArticleDto articleDto = articleDao.findById(id);
+        System.out.println(articleDto);
+        articleDto.setCategory(Category.getDisplayName(articleDto.getCategoryValue()));
+        System.out.println(articleDto);
+        return articleDto;
     }
     //게시글 1개 조회 - 게시글 ID, 작성자(memberId) - 조회시 articleDto 반환, 없을 시 null 반환
     public ArticleDto getArticle(String memberId, int id){

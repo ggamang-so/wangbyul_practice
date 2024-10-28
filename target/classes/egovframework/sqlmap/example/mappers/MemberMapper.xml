@@ -10,14 +10,14 @@
 
 <!--    </resultMap>-->
     <select id="findByIdAndPassword" resultType="egovframework.example.dto.MemberDto">
-        select * from member where memberid=#{memberId} and memberpassword=#{memberPassword}
+        select * from member where member_id=#{memberId} and member_pw=#{memberPw}
     </select>
     <insert id="save" parameterType="egovframework.example.dto.MemberDto">
-        INSERT INTO member (memberid, memberpassword, name, email, nickname)
-        VALUES (#{memberId}, #{memberPassword}, #{name}, #{email}, #{nickname})
+        INSERT INTO member (member_id, member_pw, name, email, birthday, nickname)
+        VALUES (#{memberId}, #{memberPw}, #{name}, #{email}, #{birthday}, #{nickname})
     </insert>
     <select id="findById" resultType="egovframework.example.dto.MemberDto">
-        select * from member where memberid=#{memberId}
+        select * from member where member_id=#{memberId}
     </select>
 
 </mapper>

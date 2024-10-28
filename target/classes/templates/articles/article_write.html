@@ -15,15 +15,18 @@
             width: 80%;
             height: 70%;
             margin: 0 auto;
-            padding-top: 100px;
+            padding-top: 30px;
         }
+
         .k-input-solid {
-            --kendo-input-border : #bbbbbb
+            --kendo-input-border: #bbbbbb
         }
-        .k-button-solid-base{
+
+        .k-button-solid-base {
             --kendo-button-border: #bbbbbb
         }
-        .k-picker-solid{
+
+        .k-picker-solid {
             --kendo-picker-border: #bbbbbb
         }
     </style>
@@ -37,21 +40,21 @@
 <script th:inline="javascript">
 
     $(function () {
-        let loginMember =  localStorage.getItem("loginId");
+        let loginMember = localStorage.getItem("loginId");
         console.log(loginMember);
 
         let write_dataSource = new kendo.data.DataSource({
-            transport:{
-                read:{
+            transport: {
+                read: {
                     url: "/api/article/create",
                     dataType: "json",
                     contentType: "application/json",
                     type: "POST"
-                },parameterMap: function (data) {
+                }, parameterMap: function (data) {
                     return JSON.stringify(data);
                 }
-            },requestEnd: function(e){
-               window.parent.getArticle(e.response.id);
+            }, requestEnd: function (e) {
+                window.parent.getArticle(e.response.id);
             }
         });
 
@@ -61,36 +64,126 @@
                 title: "",
                 content: "",
                 memberId: loginMember,
+                startDate:"",
+                endDate:"",
+                categoryValue:""
+            },
+            layout: "grid",
+            grid: {
+                cols: 3,
+                gutter: 10
             },
             items: [{
                 field: "title",
-                label: "Title",
-                validation: {required: true}
-            }, {
-                field: "content",
-                label: "Content",
-                editor: function (container, options) {
-                    let textarea = $("<textarea id='content' name=" + options.field + " rows='50' cols='10' style='width:100%; height:600px' aria-label='editor'> </textarea>")
-                        .appendTo(container);
-                    textarea.kendoTextArea(); // This initializes it as a Kendo TextArea
-                    kendo.bind(textarea, options.model);
-                }
+                label: "제목",
+                colSpan: 3,
+                validation: {required: true},
             }, {
                 field: "memberId",
-                label: "Author",
-                validation: {required: true, readOnly: true}
-            }],
+                label: "글쓴이",
+                colSpan: 2,
+                validation: {required: true, readonly: true},
+            }, {
+                field: "startDate",
+                label: "시작일",
+                editor: "DatePicker",
+                colSpan: 1,
+                validation: {required: true},
+                editorOptions:{
+                    format: "yyyy-MM-dd",
+                    change: onStartDateChange
+                }
+            }, {
+                field: "categoryValue",
+                label: "카테고리",
+                colSpan: 2,
+                editor: "DropDownList",
+                validation: {required: true},
+                editorOptions: {
+                    placeholder: "카테고리를 선택하세요",
+                    dataTextField: "name",
+                    dataValueField: "value",
+                    filter: "contains",
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: "/api/article/category",
+                                type: "GET",
+                                contentType: "application/json"
+                            }
+                        }, schema: {
+                            category: "category",
+                            model: {
+                                fields: {
+                                    name: {type: "string"},
+                                    value: {type: "integer"}
+                                }
+                            }
+                        }, requestEnd: function (e) {
+                            console.log(e.response);
+                        }
+                    }
+                }
+            },
+                {
+                    field: "endDate",
+                    label: "종료일",
+                    editor: "DatePicker",
+                    colSpan: 1,
+                    validation: {required: true},
+                    editorOptions:{
+                        format: "yyyy-MM-dd",
+                        change: onEndDateChange
+                    }
+                },
+                {
+                    field: "content",
+                    label: "내용",
+                    colSpan: 3,
+                    editor: function (container, options) {
+                            let textarea = $("<textarea id='content' name=" + options.field + " rows='50' cols='10' style='width:100%; height:600px' aria-label='editor'> </textarea>")
+                                .appendTo(container);
+                            textarea.kendoTextArea(); // This initializes it as a Kendo TextArea
+                            kendo.bind(textarea, options.model);
+                    }
+                }
+            ],
             buttonsTemplate: `
             <button id="create_submitBtn" type="button" >저장하기</button>
             <button id="create_cancelBtn" type="button" >취소하기</button>
-        `
+            `
         });
 
-        function submitForm(){
+        function onStartDateChange(e) {
+
+            var startDate = e.sender.value();
+            var endDatePicker = $("#article_write_form").find("input[name='endDate']").data("kendoDatePicker");
+
+            if (endDatePicker.value() && endDatePicker.value() < startDate) {
+                endDatePicker.value(null); // End date 초기화
+                alert("End Date cannot be before Start Date.");
+            }
+
+            // EndDate의 최소값을 StartDate로 설정
+            endDatePicker.min(startDate);
+        }
+
+        function onEndDateChange(e) {
+
+            var startDate = $("#article_write_form").find("input[name='startDate']").data("kendoDatePicker").value();
+            var endDate = e.sender.value();
+
+            if (endDate && endDate < startDate) {
+                e.sender.value(null); // End date 초기화
+                alert("종료일이 시작일보다 빠를 수 없습니다. 종료일을 다시 설정해주세요.");
+            }
+        }
+
+        function submitForm() {
             console.log("submitForm Called");
             let formData = $("#article_write_form").serializeArray();
             let dataObject = {};
-            formData.forEach(function(item) {
+            formData.forEach(function (item) {
                 dataObject[item.name] = item.value;
             });
             write_dataSource.read(dataObject);
@@ -101,7 +194,7 @@
             themeColor: "primary",
             rounded: "large",
             fillMode: "solid"
-        }).click(function(){
+        }).click(function () {
             submitForm()
 
         });
