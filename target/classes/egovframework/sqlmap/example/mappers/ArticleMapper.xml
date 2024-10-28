@@ -3,28 +3,38 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="egovframework.example.dao.ArticleDao">
+    <resultMap id="articleResultMap" type="ArticleDTO">
+        <id property="id" column="id" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="memberId" column="member_id" />
+        <result property="categoryValue" column="category" /> <!-- category를 categoryValue에 매핑 -->
+        <result property="startDate" column="start_date" />
+        <result property="endDate" column="end_date" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
     <select id="totalArticleCount" resultType="int">
         select count(id) from article
     </select>
-    <select id="findAllArticle" resultType="egovframework.example.dto.ArticleDto">
+    <select id="findAllArticle" resultMap="articleResultMap">
         SELECT * FROM article ORDER BY id DESC
         LIMIT #{pageSize} OFFSET (#{page}-1) * #{pageSize}
     </select>
-    <select id="findById"  resultType="egovframework.example.dto.ArticleDto">
+    <select id="findById"  resultMap="articleResultMap">
         select * from article where id = #{id}
     </select>
     <delete id="deleteById" >
         delete from article where id=#{id}
     </delete>
     <insert id="save" parameterType="egovframework.example.dto.ArticleDto" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into article ( title, content, memberid ) values ( #{title}, #{content}, #{memberId} )
-        returning id
+        insert into article (title, content, member_id, category, start_date, end_date) values ( #{title}, #{content}, #{memberId}, #{categoryValue}, #{startDate}, #{endDate})
     </insert>
     <select id="returningId" resultType="int">
         select currval('article_id_seq')
     </select>
     <update id="update" parameterType="egovframework.example.dto.ArticleDto">
-        update article set title=#{title}, content=#{content} where id=#{id}
+        update article set title=#{title}, content=#{content}, category=#{categoryValue}, start_date= #{startDate}, end_date=#{endDate} where id=#{id}
     </update>
 
 </mapper>

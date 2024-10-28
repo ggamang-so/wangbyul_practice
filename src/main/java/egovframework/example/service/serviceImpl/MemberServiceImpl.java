@@ -44,16 +44,16 @@ public class MemberServiceImpl implements MemberService {
         if (member != null) {
             throw new Exception("이미 존재하는 회원입니다. 다른 계정으로 변경해주세요");
         }
-        String hashedPassword = PasswordUtil.hashPassword(memberDto.getMemberPassword());
-        memberDto.setMemberPassword(hashedPassword);
+        String hashedPassword = PasswordUtil.hashPassword(memberDto.getMemberPw());
+        memberDto.setMemberPw(hashedPassword);
         memberDao.save(memberDto);
 
     }
 
     @Override
-    public String loginMember(String memberId, String memberPassword) {
+    public String loginMember(String memberId, String memberPw) {
         MemberDto memberDto = memberDao.findById(memberId);
-        if (memberDto != null && PasswordUtil.verifyPassword(memberPassword, memberDto.getMemberPassword())){
+        if (memberDto != null && PasswordUtil.verifyPassword(memberPw, memberDto.getMemberPw())){
             return jwtService.generateToken(memberId); // 로그인 성공시 jwt 토큰 반환
         } else{
             throw new RuntimeException("Invalid username or password");

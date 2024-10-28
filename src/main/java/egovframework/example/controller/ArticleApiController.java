@@ -1,17 +1,19 @@
 package egovframework.example.controller;
 
+import egovframework.example.Const.Category;
 import egovframework.example.dto.ArticleDto;
 import egovframework.example.service.ArticleService;
 import egovframework.example.service.JwtService;
 import egovframework.example.service.serviceImpl.JwtServiceImpl;
 import egovframework.example.vo.PageVo;
+import jakarta.annotation.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/article/")
@@ -44,6 +46,7 @@ public class ArticleApiController {
 
     @PostMapping("/create")
     public ResponseEntity<ArticleDto> saveArticle(@RequestBody ArticleDto articleDto) {
+        System.out.println("Article create : "+articleDto.toString());
         ArticleDto savedArticle = articleService.saveArticle(articleDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedArticle);
     }
@@ -74,6 +77,14 @@ public class ArticleApiController {
             articleService.deleteArticle(id);
             return ResponseEntity.ok("삭제가 완료되었습니다.");
     }
+    @GetMapping("/category")
+    public ResponseEntity< List<Map<String, ? extends Serializable>>> getCategory(@Nullable @RequestHeader("Authorization") String token) {
+            List<Map<String, ? extends Serializable>> categoryList =
+                    Arrays.stream(Category.values())
+                            .map(category -> Map.of("name", category.getDisplayName(), "value", category.getValue()))
+                            .collect(Collectors.toList());
+        return ResponseEntity.ok(categoryList);
 
+    }
 
 }

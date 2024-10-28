@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author : com
@@ -27,9 +28,10 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class MemberDto {
     private String memberId;
-    private String memberPassword;
+    private String memberPw;
     private String name;
     private String email;
+    private Date birthday;
     private String nickname;
     private LocalDateTime createdAt;
 

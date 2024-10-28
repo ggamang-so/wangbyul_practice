@@ -30,7 +30,7 @@ public class MemberApiController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody MemberDto memberDto) throws Exception {
         System.out.println(memberDto.toString());
-        String token = memberService.loginMember(memberDto.getMemberId(), memberDto.getMemberPassword());
+        String token = memberService.loginMember(memberDto.getMemberId(), memberDto.getMemberPw());
         Map<String, Object> map = new HashMap<>();
         map.put("token", token);
         map.put("memberId", memberDto.getMemberId());
