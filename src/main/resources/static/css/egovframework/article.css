@@ -1,0 +1,30 @@
+#menu_header{
+    display: flex;
+    align-items: center;
+    height: 60px;
+
+}
+#header{
+    background-color: #143b60;
+}
+.menu_item{
+    margin: 0 auto;
+
+
+}
+a {
+    color: inherit; /* 부모 요소의 색상을 상속받음 */
+    text-decoration: none; /* 밑줄 없애기 */
+}
+
+a:visited {
+    color: inherit; /* 방문한 링크의 색상도 부모 요소의 색상으로 설정 */
+}
+
+a:hover {
+    color: inherit; /* 마우스를 올렸을 때도 부모 요소의 색상으로 설정 */
+}
+
+a:active {
+    color: inherit; /* 클릭했을 때도 부모 요소의 색상으로 설정 */
+}

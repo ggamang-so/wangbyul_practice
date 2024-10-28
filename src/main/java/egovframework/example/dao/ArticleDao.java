@@ -1,6 +1,7 @@
 package egovframework.example.dao;
 
 import egovframework.example.dto.ArticleDto;
+import egovframework.example.dto.CategoryDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface ArticleDao {
     void update(ArticleDto article);
 
     int totalArticleCount();
+
+    List<CategoryDto> articleCountPerCategory();
 }

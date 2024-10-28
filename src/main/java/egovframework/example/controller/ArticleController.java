@@ -50,5 +50,10 @@ public class ArticleController {
         return "articles/article_editor";
     }
 
+    //게시글 데쉬보드 페이지
+    @GetMapping("/article/dashboard")
+    public String dashboard() {
+        return "articles/article_dashboard";
+    }
 
 }

@@ -2,6 +2,7 @@ package egovframework.example.controller;
 
 import egovframework.example.Const.Category;
 import egovframework.example.dto.ArticleDto;
+import egovframework.example.dto.CategoryDto;
 import egovframework.example.service.ArticleService;
 import egovframework.example.service.JwtService;
 import egovframework.example.service.serviceImpl.JwtServiceImpl;
@@ -85,6 +86,13 @@ public class ArticleApiController {
                             .collect(Collectors.toList());
         return ResponseEntity.ok(categoryList);
 
+    }
+
+    @GetMapping("/category/count")
+    public ResponseEntity<List<CategoryDto>> getCategoryCount(@Nullable @RequestHeader("Authorization") String token) {
+        List<CategoryDto> categoryCounts = articleService.getCountArticleCategory().stream()
+                .map(CategoryDto::of).toList();
+        return ResponseEntity.ok(categoryCounts);
     }
 
 }
