@@ -186,6 +186,7 @@
             formData.forEach(function (item) {
                 dataObject[item.name] = item.value;
             });
+            console.log(dataObject)
             write_dataSource.read(dataObject);
         }
 

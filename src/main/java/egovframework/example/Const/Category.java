@@ -41,4 +41,13 @@ public enum Category {
         return null;
     }
 
+    public static Integer getValue(Object displayName){
+        for (Category category : values()) {
+            if (category.getDisplayName().equals(displayName)) {
+                return category.getValue();
+            }
+        }
+        return null;
+    }
+
 }

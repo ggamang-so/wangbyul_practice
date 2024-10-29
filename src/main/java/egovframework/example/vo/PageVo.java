@@ -12,4 +12,6 @@ import lombok.ToString;
 public class PageVo {
     private int page;
     private int pageSize;
+    private String searchField;
+    private Object searchValue;
 }

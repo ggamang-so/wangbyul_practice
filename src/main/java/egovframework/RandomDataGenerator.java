@@ -49,15 +49,15 @@ public class RandomDataGenerator {
             }
 
             // 200개의 아티클 데이터 생성
-            for (int i = 0; i < 200; i++) {
-                int articleId = i + 1; // 아티클 ID
+            for (int i = 0; i < 1000; i++) {
+                int articleId = i + 6; // 아티클 ID
                 String title = getRandomString("Title " + (i + 1), 255); // 랜덤 제목 (최대 255자)
                 String content = getRandomString("This is the content of article " + (i + 1), 65535); // 랜덤 내용 (최대 65535자)
                 String memberId = memberIds.get(random.nextInt(memberIds.size())); // 랜덤 멤버 ID (이미 생성된 member_id에서 선택)
                 int category = random.nextInt(10) + 1; // 1~5 범위의 카테고리
-                String startDate = dateFormat.format(generateRandomDate(2020, 2024)); // 랜덤 시작일
-                String endDate = dateFormat.format(generateRandomDate(2025, 2028)); // 랜덤 종료일
-                String articleCreatedAt = timestampFormat.format(generateRandomTimestamp(2020, 2024)); // 랜덤 아티클 생성일
+                String startDate = dateFormat.format(generateRandomDate(2024, 2024)); // 랜덤 시작일
+                String endDate = dateFormat.format(generateRandomDate(2025, 2025)); // 랜덤 종료일
+                String articleCreatedAt = timestampFormat.format(generateRandomTimestamp(2024, 2024)); // 랜덤 아티클 생성일
 
                 articleWriter.append(String.join(",", String.valueOf(articleId), title, content, memberId, String.valueOf(category), startDate, endDate, articleCreatedAt) + "\n");
             }

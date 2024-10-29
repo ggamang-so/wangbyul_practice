@@ -20,7 +20,6 @@ public class MemberApiController {
 
     @PostMapping("/signup")
     public  ResponseEntity<Map<String, Object>> signup(@RequestBody MemberDto memberDto) throws Exception {
-        System.out.println(memberDto.toString());
         memberService.signUpMember(memberDto);
         Map<String, Object> map = new HashMap<>();
         map.put("message", "회원가입에 성공했습니다. 로그인을 진행해주세요");
@@ -29,7 +28,6 @@ public class MemberApiController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody MemberDto memberDto) throws Exception {
-        System.out.println(memberDto.toString());
         String token = memberService.loginMember(memberDto.getMemberId(), memberDto.getMemberPw());
         Map<String, Object> map = new HashMap<>();
         map.put("token", token);

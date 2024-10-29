@@ -76,9 +76,6 @@
                     read:{
                         url: detail_url,
                         type: "GET",
-                        headers: {
-                            "Authorization": "Bearer "+ localStorage.getItem("token")
-                        },
                         contentType: "application/json"
                     }
                 },requestEnd:function(e){
@@ -91,7 +88,7 @@
                     transForm_dataSource.push({field : "종료일", value: result["endDate"]});
                     transForm_dataSource.push({field : "카테고리", value: result["category"]});
                     transForm_dataSource.push({field : "내용", value: result["content"]});
-
+                    console.log(transForm_dataSource);
                     article_grid();
 
                     if(loginId!=null && memberId===loginId){
@@ -103,9 +100,21 @@
             detail_dataSource.read();
             function article_grid(){
                 $("#article_grid").kendoGrid({
-                    dataSource: transForm_dataSource,
+                    dataSource: {
+                        data:transForm_dataSource,
+                        schema: {
+                            model: {
+                                fields: {
+                                    field: { type: "string" },
+                                    value: { type: "string" }
+                                }
+                            }
+                        }
+                    },
                     columns:[
-                        {field: "field", width: "30%",
+                        {
+                            field: "field",
+                            width: "30%",
                             headerAttributes: { style: "display:none;" },
                             attributes: {
                                 style: "background-color: #143b60; text-align: center; font-weight: bold; color: white" // 셀 스타일
@@ -113,9 +122,9 @@
                         },
                         {field: "value", width: "70%", headerAttributes: { style: "display:none;" }}
                     ],
-                    editable: "popup",
                     scrollable: false,
                     dataBound: function(e) {
+
                         let lastRow = e.sender.tbody.find("tr").last(); // 마지막 행 선택
                         lastRow.css("height", "300px"); // 원하는 높이로 설정
                     }
@@ -127,19 +136,20 @@
             function deleteArticle(id){
                 let delete_dataSource = new kendo.data.DataSource({
                     transport:{
-                        read:{
-                            url: "/api/article/delete/" + encodeURIComponent(id),
-                            type: "GET",
+                        destroy: {
+                            url: `/api/article/delete/${encodeURIComponent(id)}`,
+                            type: "DELETE",
+                            dataType: "json",
                             contentType: "application/json",
-                            headers: {"Authorization": "Bearer "+ localStorage.getItem("token")}
+                            headers: {"Authorization": "Bearer " + localStorage.getItem("token")}
                         }
-                    },requestEnd: function(){
-                            window.location.reload();
-                            window.parent.closeDialog();
+                    },requestEnd: function(e){
+                        window.location.reload();
+                        window.parent.closeDialog();
 
                     }
                 })
-                delete_dataSource.read();
+                delete_dataSource.transport.destroy();
             }
 
 
@@ -151,8 +161,8 @@
                 fillMode: "solid"
             }).click(function(){
                 window.parent.updateForm(id);
-
             });
+
             $("#deleteBtn").kendoButton({
                 size: "large",
                 themeColor: "error",
@@ -161,6 +171,7 @@
             }).click(function(){
                 deleteArticle(id)
             });
+
             $("#listBtn").kendoButton({
                 size: "large",
                 themeColor: "base",
@@ -169,7 +180,6 @@
             }).click(function(){
                 window.parent.location.reload()
                 window.parent.closeDialog();
-
             });
 
         })

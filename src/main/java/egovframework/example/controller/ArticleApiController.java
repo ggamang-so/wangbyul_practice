@@ -3,6 +3,8 @@ package egovframework.example.controller;
 import egovframework.example.Const.Category;
 import egovframework.example.dto.ArticleDto;
 import egovframework.example.dto.CategoryDto;
+import egovframework.example.dto.DailyArticleDto;
+import egovframework.example.dto.MemberArticleDto;
 import egovframework.example.service.ArticleService;
 import egovframework.example.service.JwtService;
 import egovframework.example.service.serviceImpl.JwtServiceImpl;
@@ -31,14 +33,8 @@ public class ArticleApiController {
     // 게시글 전체 조회
     @PostMapping("/list")
     public ResponseEntity<Map<String, Object>> getArticles(@RequestBody PageVo pageVo) throws Exception {
-        System.out.println(pageVo.toString());
-        int page = pageVo.getPage();
-        int pageSize = pageVo.getPageSize();
-
-        List<ArticleDto> list = articleService.getArticleList(page, pageSize);
-        int total = articleService.getTotalArticleCount();
-        System.out.println(list.toString());
-
+        List<ArticleDto> list = articleService.getArticleList(pageVo);
+        int total = articleService.getTotalArticleCount(pageVo);
         Map<String, Object> result = new HashMap<>();
         result.put("data", list);
         result.put("total", total);
@@ -47,31 +43,29 @@ public class ArticleApiController {
 
     @PostMapping("/create")
     public ResponseEntity<ArticleDto> saveArticle(@RequestBody ArticleDto articleDto) {
-        System.out.println("Article create : "+articleDto.toString());
         ArticleDto savedArticle = articleService.saveArticle(articleDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedArticle);
     }
 
     // 게시글 1개 조회
     @GetMapping("/{id}")
-    public ResponseEntity<ArticleDto> getArticle(@PathVariable("id") int id, @RequestHeader("Authorization") String tokenWithBearer) {
+    public ResponseEntity<ArticleDto> getArticle(@PathVariable("id") int id) {
         ArticleDto article = articleService.getArticle(id);
         return ResponseEntity.ok(article);
     }
 
     @PostMapping("/update")
     public ResponseEntity<Map<String, Object>> updateArticle(@RequestBody ArticleDto articleDto, @RequestHeader("Authorization") String tokenWithBearer) {
-        System.out.println("received Article(update) : " + articleDto.toString());
         articleService.updateArticle(articleDto);
         Map<String, Object> map = new HashMap<>();
         map.put("message", "게시글이 수정되었습니다.");
         return ResponseEntity.ok(map);
     }
 
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteArticle(@PathVariable("id") int id, @RequestHeader("Authorization") String tokenWithBearer) {
+        System.out.println(id);
         String token = tokenWithBearer.replace("Bearer ", "");
-        System.out.println(token);
         if(!jwtService.validateToken(token, articleService.getArticle(id).getMemberId())){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("접근권한이 없습니다. 로그인을 확인해주세요.");
         }
@@ -93,6 +87,18 @@ public class ArticleApiController {
         List<CategoryDto> categoryCounts = articleService.getCountArticleCategory().stream()
                 .map(CategoryDto::of).toList();
         return ResponseEntity.ok(categoryCounts);
+    }
+
+    @GetMapping("/member/count")
+    public ResponseEntity<List<MemberArticleDto>> getMemberArticleCount(@Nullable @RequestHeader("Authorization") String token) {
+        List<MemberArticleDto> memberArticleDto = articleService.getArticleCountPerMemberId();
+        return ResponseEntity.ok(memberArticleDto);
+    }
+
+    @GetMapping("/daily/count")
+    public ResponseEntity<List<DailyArticleDto>> getDailyArticleCount(@Nullable @RequestHeader("Authorization") String token) {
+        List<DailyArticleDto> dailyArticleDto = articleService.getArticleCountDaily();
+        return ResponseEntity.ok(dailyArticleDto);
     }
 
 }
