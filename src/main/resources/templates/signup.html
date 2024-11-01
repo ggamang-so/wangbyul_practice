@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Sign up</title>
-    <link href="/static/kendo/css/common.css" rel="stylesheet"/>
-    <script src="/static/js/jquery-3.7.1.min.js"></script>
-    <script src="/static/kendo/js/kendo.all.min.js"></script>
+    <link href="/kendo/css/common.css" rel="stylesheet"/>
+    <script src="/js/jquery-3.7.1.min.js"></script>
+    <script src="/kendo/js/kendo.all.min.js"></script>
     <!--  한글화 -->
-    <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
-    <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <script src="/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
+    <script src="/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
 
         #signup_container {
@@ -41,13 +41,8 @@
     </style>
     <script>
         $(function () {
-            let errorMessage = "[[${errorMessage}]]";
 
-            if (errorMessage) {
-                alert(errorMessage); // 오류 메시지를 alert로 표시
-            }
-            // Define the form fields
-            var formFields = [
+            let formFields = [
                 {
                     field: "memberId",
                     label: "Member ID",
@@ -71,7 +66,7 @@
                 }, {
                     field: "passwordConfirm",
                     label: "Password Confirmation",
-                    editor: function (container, options) {
+                    editor: function (container) {
                         $('<input type="password" id="password_confirm"  autocomplete="off" aria-labelledby="Password-form-label" />')
                             .appendTo(container)
                             .kendoTextBox();
@@ -93,21 +88,21 @@
                         required: true,
 
                     }
-                },{
+                }, {
                     field: "email",
                     label: "E-mail",
                     validation: {
                         required: true,
                         type: "email",
                     }
-                },{
+                }, {
                     field: "birthday",
                     label: "Birthday",
                     validation: {
                         required: true,
                         type: "date"
                     }
-                },{
+                }, {
                     field: "nickname",
                     label: "Nick Name",
 
@@ -115,7 +110,6 @@
             ];
 
 
-            // Create the Kendo Form
             $("#signup_form").kendoForm({
                 orientation: "vertical",
                 formData: {
@@ -124,49 +118,73 @@
                 },
                 items: formFields,
                 buttonsTemplate:
-                    '<button id="signupBtn" type="submit" > 회원가입 </button>' +
-                    '<button id="cancelBtn" > 취소 </button>',
-                submit: function (e) {
-                    e.preventDefault();
-                    if ($("#password").val() != $("#password_confirm").val()) {
-                        alert("오류");
-                        $("#error_message").css("display", "block");
-                        return false;
+                    '<button id="signupBtn" type="button" > 회원가입 </button>' +
+                    '<button id="cancelBtn" type="button"> 취소 </button>'
 
-                    } else {
-                        this.submit();
-                    }
-
-                }
             });
-            $("#cancelBtn").click(function () {
-                if (confirm("취소하시면 지금까지 작성하신 모든 내용을 잃게 됩니다. 정말 취소하시겠습니까?")) {
-                    window.location.href = "/";
-                }
-            })
 
             $("#cancelBtn").kendoButton({
                 size: "large",
                 themeColor: "base",
                 rounded: "large",
                 fillMode: "solid"
+            }).click(function () {
+                if (confirm("취소하시면 지금까지 작성하신 모든 내용을 잃게 됩니다. 정말 취소하시겠습니까?")) {
+                    window.location.href = "/";
+                }
             });
+
+            let signup_dataSource = new kendo.data.DataSource({
+                transport: {
+                    read:{
+                        url: "/api/member/signup",
+                        type: "post",
+                        dataType: "json",
+                        contentType: "application/json",
+                        headers: {
+                            "refreshToken": localStorage.getItem("refreshToken"),
+                            "loginId": localStorage.getItem("loginId")
+                        }
+                    },parameterMap(data) {
+                        return JSON.stringify(data);
+                    }
+                },error:function(e){
+                    console.log(e);
+                }
+            })
+
             $("#signupBtn").kendoButton({
                 size: "large",
                 themeColor: "success",
                 rounded: "large",
                 fillMode: "solid"
+            }).click(function () {
+                if ($("#password").val() != $("#password_confirm").val()) {
+                    alert("비밀 번호 확인 오류");
+                    $("#error_message").css("display", "block");
+
+                } else if ($("#signup_form").data("kendoForm").validate()) {
+                    alert("필수 항목들을 작성해 주세요.")
+                } else {
+                    let formData = $("#signup_form").serializeArray();
+                    let dataObject = {};
+                    formData.forEach(function (item) {
+                        dataObject[item.name] = item.value;
+                    });
+                    console.log(dataObject)
+                    signup_dataSource.read(dataObject);
+                    signupDialog_close();
+                }
             });
 
-        })
-            ;
+        });
     </script>
 </head>
 <body>
 <div id="signup_container">
-    <div id="error_message" style="color:red; border:none; display:none"> 비밀번호가 일치하지 않습니다. </div>
+    <div id="error_message" style="color:red; border:none; display:none"> 비밀번호가 일치하지 않습니다.</div>
 
-    <form id="signup_form" action="/api/member/signup" method="post">
+    <form id="signup_form">
 
     </form>
 </div>

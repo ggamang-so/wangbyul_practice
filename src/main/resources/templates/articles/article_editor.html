@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <title>Article_editor</title>
     <link href="/static/kendo/css/common.css" rel="stylesheet"/>
-    <!--    <link href="https://kendo.cdn.telerik.com/themes/9.0.0/default/default-main.css" rel="stylesheet" />-->
     <script src="/static/js/jquery-3.7.1.min.js"></script>
     <script src="/static/kendo/js/kendo.all.min.js"></script>
-    <!--  한글화 -->
     <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
     <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
     <style>
@@ -35,12 +33,6 @@
 <div id="editor_container">
     <form id="article_editor_form" action="/article/updateOk" method="post">
 
-        <!--        <span id="id" th:data="${article.id}" th:text="${article.id}" hidden/>-->
-        <!--        <span id="member-id" th:data="${article.memberId}" th:text="${article.memberId}" hidden/>-->
-        <!--        <span id="title" th:data="${article.title}" th:text="${article.title}" hidden/>-->
-        <!--        <span id="content" th:data="${article.content}" th:text="${article.content}" hidden/>-->
-        <!--        <span id="createdat" th:data="${article.createdAt}" th:text="${article.createdAt}" hidden/>-->
-
 
     </form>
 </div>
@@ -59,13 +51,13 @@
         let article_detail_dataSource = new kendo.data.DataSource({
             transport: {
                 read: {
-                    url: function () {
-                        return "/api/article/" + encodeURIComponent(id)
-                    },
+                    url:  `/api/article/${encodeURIComponent(id)}`,
                     type: "GET",
-                    headers: {"Authorization": "Bearer " + localStorage.getItem("token")},
                     contentType: "application/json",
-
+                    headers: {
+                        "refreshToken": localStorage.getItem("refreshToken"),
+                        "loginId": localStorage.getItem("loginId")
+                    },
                 }
             }, requestEnd: function (data) {
                 let result = data.response;
@@ -105,13 +97,14 @@
                         contentType: "application/json",
                         type: "POST",
                         headers: {
-                            "Authorization": "Bearer " + localStorage.getItem("token")
+                            "refreshToken": localStorage.getItem("refreshToken"),
+                            "memberId": localStorage.getItem("loginId")
                         }
                     }, parameterMap: function (data) {
                         return JSON.stringify(data);
                     }
-                }, requestEnd: function (e) {
-                    alert(e.response.message);
+                }, error: function (e) {
+                    alert(e.xhr.responseJSON.message); // 오류 메시지 표시
                 }
             });
             update_dataSource.read(formData)
@@ -139,8 +132,8 @@
                 items: [{
                     field: "id",
                     label: "Id",
-                    editor:"TextBox",
-                    colSpan:3,
+                    editor: "TextBox",
+                    colSpan: 3,
                     validation: {required: true, readonly: true}
                 }, {
                     field: "title",
@@ -158,7 +151,7 @@
                     editor: "DatePicker",
                     colSpan: 1,
                     validation: {required: true},
-                    editorOptions:{
+                    editorOptions: {
                         format: "yyyy-MM-dd",
                         change: onStartDateChange
                     }
@@ -200,7 +193,7 @@
                         editor: "DatePicker",
                         colSpan: 1,
                         validation: {required: true},
-                        editorOptions:{
+                        editorOptions: {
                             format: "yyyy-MM-dd",
                             change: onEndDateChange
                         }
@@ -258,7 +251,7 @@
                 formData.forEach(function (item) {
                     dataObject[item.name] = item.value;
                 });
-                dataObject["createdAt"]="";
+                dataObject["createdAt"] = "";
                 updateSubmit(dataObject);
                 console.log("article update complete");
                 window.parent.getArticle(id);
@@ -268,8 +261,8 @@
                 themeColor: "base",
                 rounded: "large",
                 fillMode: "solid"
-            }).click(function(){
-                if(confirm("정말 취소하시겠습니까? 취소하시면 변경 정보를 모두 잃을 수 있습니다.")){
+            }).click(function () {
+                if (confirm("정말 취소하시겠습니까? 취소하시면 변경 정보를 모두 잃을 수 있습니다.")) {
                     window.parent.getArticle(id);
                 }
             });

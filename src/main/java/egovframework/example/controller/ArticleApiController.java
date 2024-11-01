@@ -32,13 +32,16 @@ public class ArticleApiController {
 
     // 게시글 전체 조회
     @PostMapping("/list")
-    public ResponseEntity<Map<String, Object>> getArticles(@RequestBody PageVo pageVo) throws Exception {
+    public ResponseEntity<Map<String, Object>> getArticles(@RequestBody PageVo pageVo,
+                                                           @RequestAttribute("isLoggedIn") boolean isLoggedIn) throws Exception {
+
         List<ArticleDto> list = articleService.getArticleList(pageVo);
         int total = articleService.getTotalArticleCount(pageVo);
         Map<String, Object> result = new HashMap<>();
+        result.put("isLoggedIn", isLoggedIn);
         result.put("data", list);
         result.put("total", total);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/create")
@@ -49,31 +52,45 @@ public class ArticleApiController {
 
     // 게시글 1개 조회
     @GetMapping("/{id}")
-    public ResponseEntity<ArticleDto> getArticle(@PathVariable("id") int id) {
-        ArticleDto article = articleService.getArticle(id);
-        return ResponseEntity.ok(article);
+    public ResponseEntity<Map<String, Object>> getArticle(@PathVariable("id") int id) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            ArticleDto article = articleService.getArticle(id);
+            map.put("article", article);
+            return ResponseEntity.ok(map);
+        }catch(Exception e){
+            map.put("message", "게시글을 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(map);
+        }
     }
 
     @PostMapping("/update")
-    public ResponseEntity<Map<String, Object>> updateArticle(@RequestBody ArticleDto articleDto, @RequestHeader("Authorization") String tokenWithBearer) {
-        articleService.updateArticle(articleDto);
+    public ResponseEntity<Map<String, Object>> updateArticle(@RequestBody ArticleDto articleDto,
+                                                             @RequestAttribute("isLoggedIn") boolean isLoggedIn ) {
         Map<String, Object> map = new HashMap<>();
-        map.put("message", "게시글이 수정되었습니다.");
-        return ResponseEntity.ok(map);
+        if(isLoggedIn){
+            articleService.updateArticle(articleDto);
+            map.put("message", "게시글이 수정되었습니다.");
+            return ResponseEntity.ok(map);
+        }else{
+            map.put("message", "잘못된 접근입니다. 로그인 후 다시 진행해주세요.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(map);
+        }
+
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteArticle(@PathVariable("id") int id, @RequestHeader("Authorization") String tokenWithBearer) {
         System.out.println(id);
         String token = tokenWithBearer.replace("Bearer ", "");
-        if(!jwtService.validateToken(token, articleService.getArticle(id).getMemberId())){
+        if(!jwtService.validateAccessToken(token, articleService.getArticle(id).getMemberId())){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("접근권한이 없습니다. 로그인을 확인해주세요.");
         }
             articleService.deleteArticle(id);
             return ResponseEntity.ok("삭제가 완료되었습니다.");
     }
     @GetMapping("/category")
-    public ResponseEntity< List<Map<String, ? extends Serializable>>> getCategory(@Nullable @RequestHeader("Authorization") String token) {
+    public ResponseEntity< List<Map<String, ? extends Serializable>>> getCategory() {
             List<Map<String, ? extends Serializable>> categoryList =
                     Arrays.stream(Category.values())
                             .map(category -> Map.of("name", category.getDisplayName(), "value", category.getValue()))
@@ -83,20 +100,20 @@ public class ArticleApiController {
     }
 
     @GetMapping("/category/count")
-    public ResponseEntity<List<CategoryDto>> getCategoryCount(@Nullable @RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<CategoryDto>> getCategoryCount() {
         List<CategoryDto> categoryCounts = articleService.getCountArticleCategory().stream()
                 .map(CategoryDto::of).toList();
         return ResponseEntity.ok(categoryCounts);
     }
 
     @GetMapping("/member/count")
-    public ResponseEntity<List<MemberArticleDto>> getMemberArticleCount(@Nullable @RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<MemberArticleDto>> getMemberArticleCount() {
         List<MemberArticleDto> memberArticleDto = articleService.getArticleCountPerMemberId();
         return ResponseEntity.ok(memberArticleDto);
     }
 
     @GetMapping("/daily/count")
-    public ResponseEntity<List<DailyArticleDto>> getDailyArticleCount(@Nullable @RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<DailyArticleDto>> getDailyArticleCount() {
         List<DailyArticleDto> dailyArticleDto = articleService.getArticleCountDaily();
         return ResponseEntity.ok(dailyArticleDto);
     }

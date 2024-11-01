@@ -56,3 +56,7 @@ select count(id) from article;
 select date(created_at) as date, count(*) as count from article group by date(created_at) order by date(created_at) desc;
 
 select currval('article_id_seq');
+
+select count(id) from article where 1=1 and category = cast('1' as integer);
+select count(id) from article where category = 1;
+select count(id) from article where 1=1  AND start_date = cast('2024-01-01' as date);

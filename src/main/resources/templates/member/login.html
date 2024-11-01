@@ -23,7 +23,7 @@
                 label: "ID",
                 placeholder: "ID를 입력해주세요"
             });
-            $("#memberPassword").kendoTextBox({
+            $("#memberPw").kendoTextBox({
                 size: "large",
                 label: "Password",
                 placeholder: "비밀번호를 입력해주세요"
@@ -36,16 +36,37 @@
                         url: "/api/member/login",
                         type: "POST",
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
+                        , headers: {
+                            "refreshToken": localStorage.getItem("refreshToken"),
+                            "loginId": localStorage.getItem("loginId")
+                        }
                     }, parameterMap: function (data) {
                         console.log(data);
                         return JSON.stringify(data);
                     }
                 },
-                requestEnd: function(e){
-                    localStorage.setItem("loginId", e.response.memberId);
-                    localStorage.setItem("token", e.response.token);
-                    window.location.href = "/";
+                requestEnd: function (e) {
+                    console.log(e);
+                    if(e.response && e.response.isLoggedIn){
+                        localStorage.setItem("loginId", e.response.memberId);
+                        localStorage.setItem("refreshToken", e.response.refreshToken);
+                        alert("로그인에 성공하였습니다.");
+                        window.location.href = "/";
+                    }
+                },error:function (e) {
+                    console.log(e.xhr);
+                    if (e.xhr) {
+                        const errorMessage = e.xhr.responseJSON.message;
+                        if (e.xhr.status === 401) {
+                            alert("에러 발생: " + errorMessage);
+                        } else if(e.xhr.status ===409){
+                            alert("에러 발생: " + errorMessage);
+                            window.location.href = "/";
+                        }
+                    } else {
+                        alert("알 수 없는 오류가 발생했습니다.");
+                    }
                 }
             });
 
@@ -56,10 +77,10 @@
                 fillMode: "solid"
             }).click(function () {
                 let memberId = $("#memberId").val();
-                let memberPassword = $("#memberPassword").val();
+                let memberPw = $("#memberPw").val();
                 login_dataSource.read({
                     memberId: memberId,
-                    memberPassword: memberPassword
+                    memberPw: memberPw
                 });
             });
 
@@ -98,26 +119,26 @@
                     field: "memberId",
                     label: "Member ID",
                     validation: {
-                        required: true,
-                        minLength: 4
+                        required: {value: true, message: "ID is required"},
+                        minLength: {value: 4, message: "ID must be at least 4 characters long"}
                     }
                 },
                 {
-                    field: "memberPassword",
+                    field: "memberPw",
                     label: "Password",
                     validation: {
-                        required: true,
-                        minLength: 6
+                        required: {value: true, message: "Password is required"},
+                        minLength: {value: 6, message: "Password must be at least 6 characters long"}
                     },
                     editor: function (container, options) {
-                        $('<input type="password" id="password" name="' + options.field + '" title="Password" autocomplete="off" aria-labelledby="Password-form-label" data-bind="value: Password" aria-describedby="Password-form-hint"/>')
+                        $('<input type="password" id="password" name="' + options.field + '" title="Password" autocomplete="off" aria-labelledby="Password-form-label" aria-describedby="Password-form-hint"/>')
                             .appendTo(container)
                             .kendoTextBox();
                     }
                 }, {
                     field: "passwordConfirm",
                     label: "Password Confirmation",
-                    editor: function (container, options) {
+                    editor: function (container) {
                         $('<input type="password" id="password_confirm"  autocomplete="off" aria-labelledby="Password-form-label" />')
                             .appendTo(container)
                             .kendoTextBox();
@@ -137,7 +158,6 @@
                     label: "Name",
                     validation: {
                         required: true,
-
                     }
                 }, {
                     field: "email",
@@ -146,35 +166,53 @@
                         required: true,
                         type: "email",
                     }
-                },{
+                }, {
                     field: "birthday",
                     label: "Birthday",
                     validation: {
                         required: true,
                         type: "date"
                     }
-                },{
+                }, {
                     field: "nickname",
                     label: "Nick Name",
-
                 }
             ];
 
             let signup_dataSource = new kendo.data.DataSource({
                 transport: {
                     read: {
-                        url: "http://localhost:8080/api/member/signup",
+                        url: "/api/member/signup",
                         type: "POST",
                         dataType: "json",
                         contentType: "application/json",
-                    },parameterMap: function (data) {
+                        headers: {
+                            "refreshToken": localStorage.getItem("refreshToken"),
+                            "loginId": localStorage.getItem("loginId")
+                        }
+                    }, parameterMap: function (data) {
                         return JSON.stringify(data);
                     }
                 },
                 requestEnd: function (e) {
-                    alert(e.response.message);
-                    signupDialog_close()
+                    if(e.response){
+                        alert(e.response.message);
+                        signupDialog_close()
+                    }
+                },
+                error: function(e) {
+                    if (e.xhr) {
+                        if (e.xhr.status === 409) {
+                            // 서버에서 반환한 에러 메시지
+                            const errorMessage = e.xhr.responseJSON.message;
+                            alert("에러 발생: " + errorMessage); // 사용자에게 에러 메시지 표시
+                        } else {
+                            alert("서버 오류가 발생했습니다. " + errorMessage);
 
+                        }
+                    } else {
+                        alert("알 수 없는 오류가 발생했습니다.");
+                    }
                 }
             });
 
@@ -182,14 +220,10 @@
             // 회원가입 켄두 폼
             $("#signup_form").kendoForm({
                 orientation: "vertical",
-                formData: {
-                    memberId: "",
-                    memberPassword: ""
-                },
                 items: formFields,
                 buttonsTemplate:
-                    '<button id="signup_submitBtn" > 회원가입 </button>' +
-                    '<button id="signup_CancelBtn" > 취소 </button>'
+                    '<button id="signup_submitBtn" type="button" > 회원가입 </button>' +
+                    '<button id="signup_CancelBtn" type="button" > 취소 </button>'
             });
 
 
@@ -204,7 +238,7 @@
                 }
             });
 
-            function signupDialog_close(){
+            window.signupDialog_close = function () {
                 $("#signup_form").data("kendoForm").clear();
                 signupDialog.data("kendoDialog").close();
             }
@@ -215,15 +249,15 @@
                 rounded: "large",
                 fillMode: "solid"
             }).click(function () {
-                if ($("#password").val() !== $("#password_confirm").val()) {
-                    alert("오류");
-                    $("#error_message").css("display", "block");
+                if (!$("#signup_form").data("kendoForm").validate()) {
+                    alert("필수 항목들을 작성해 주세요.")
                 } else {
                     let formData = $("#signup_form").serializeArray();
                     let dataObject = {};
-                    formData.forEach(function(item) {
+                    formData.forEach(function (item) {
                         dataObject[item.name] = item.value;
                     });
+                    console.log(dataObject)
                     signup_dataSource.read(dataObject);
 
                 }
@@ -240,7 +274,8 @@
 </div>
 <div id="login-container">
     <input type="text" id="memberId"/>
-    <input type="password" id="memberPassword"/>
+    <input type="password" id="memberPw"/>
+    <div id="login_fail_message" style="display: none; color:darkred"> ID나 비밀번호가 유효하지 않습니다. 확인해주세요.  </div>
     <div id="signupDialog"></div>
 
     <div id="buttons">

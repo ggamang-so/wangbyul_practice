@@ -27,7 +27,8 @@ public class ArticleController {
 
     //게시글 목록 페이지
     @GetMapping("/")
-    public String home() {
+    public String home(ModelMap model) {
+
         return "articles/article_list";
     }
 

@@ -28,7 +28,10 @@
 
 
     </style>
-    <script>
+    <script th:inline="javascript">
+
+        let isLoggedIn = false;
+        let loginId = localStorage.getItem("loginId");
 
         function getArticle(value) {
             closeDialog()
@@ -42,38 +45,41 @@
 
 
         $(function () {
-                if (loginStatus.isLoggedIn) {
+            function loginUi(){
+                if (isLoggedIn) {
                     $("#loginBtn").css("display", "none");
                     $("#logoutBtn").css("display", "block");
-                    $("#loginId").css("display", "block").text(loginStatus.loginId + "님 환영합니다.");
+                    $("#loginId").css("display", "block").text(loginId + "님 환영합니다.");
                 } else {
                     $("#loginBtn").css("display", "block");
                     $("#logoutBtn").css("display", "none");
                     $("#loginId").css("display", "none");
                 }
+            }
 
-                $("#searchField").kendoDropDownList({
-                    dataSource: [
-                        {text: "제목", value: "title"},
-                        {text: "작성자 ID", value: "memberId"},
-                        {text: "카테고리", value: "category"},
-                        {text: "시작일", value: "startDate"},
-                        {text: "종료일", value: "endDate"}
-                    ],
-                    dataTextField: "text",
-                    dataValueField: "value",
-                    index: 0, // 초기 선택값 (첫 번째 항목 선택)
-                    optionLabel: "검색 항목 선택",
-                    change: onSearchFieldChange
-                });
 
-                $("#searchBox").kendoTextBox({
-                    placeholder: "검색어 입력",
-                    change: onSearch
-                });
-                $("#searchDatePicker").kendoDatePicker({
-                    format: "yyyy-MM-dd" // 원하는 날짜 형식
-                }).closest(".k-input").hide().change(onSearch);
+            $("#searchField").kendoDropDownList({
+                dataSource: [
+                    {text: "제목", value: "title"},
+                    {text: "작성자 ID", value: "memberId"},
+                    {text: "카테고리", value: "category"},
+                    {text: "시작일", value: "startDate"},
+                    {text: "종료일", value: "endDate"}
+                ],
+                dataTextField: "text",
+                dataValueField: "value",
+                index: 0, // 초기 선택값 (첫 번째 항목 선택)
+                optionLabel: "검색 항목 선택",
+                change: onSearchFieldChange
+            });
+
+            $("#searchBox").kendoTextBox({
+                placeholder: "검색어 입력",
+                change: onSearch
+            });
+            $("#searchDatePicker").kendoDatePicker({
+                format: "yyyy-MM-dd" // 원하는 날짜 형식
+            }).closest(".k-input").hide().change(onSearch);
 
             function onSearch() {
                 const articleTable = $("#articleTable").data("kendoGrid");
@@ -81,7 +87,9 @@
                     articleTable.dataSource.read(); // 데이터 소스 리프레시
                 }
             }
+
             let searchField;
+
             function onSearchFieldChange() {
                 $("#searchBox").data("kendoTextBox").value("")
                 $("#searchDatePicker").data("kendoDatePicker").value("")
@@ -98,212 +106,197 @@
             }
 
 
-
-                $("#articleTable").kendoGrid({
-                    dataSource: {
-                        transport: {
-                            read: {
-                                url: "/api/article/list",
-                                dataType: "json",
-                                contentType: "application/json",
-                                type: "POST",
-                                data: function () {
-                                    let articleTable = $("#articleTable").data("kendoGrid");
-                                    return {
-                                        page: articleTable ? articleTable.dataSource.page() : 1,
-                                        pageSize: articleTable ? articleTable.dataSource.pageSize() : 10,
-                                        searchField: $("#searchField").data("kendoDropDownList").value(), // 선택된 검색 항목
-                                        searchValue: (searchField==='startDate' || searchField==='endDate') ? $("#searchDatePicker").data("kendoDatePicker").value() : $("#searchBox").data("kendoTextBox").value(), // DatePicker인지 TextBox인지에 따라 값 가져오기
-                                    };
-                                }
+            let articleTableGrid = $("#articleTable").kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url: "/api/article/list",
+                            dataType: "json",
+                            contentType: "application/json",
+                            type: "POST",
+                            headers: {
+                                "refreshToken": localStorage.getItem("refreshToken"),
+                                "loginId": localStorage.getItem("loginId")
                             },
-                            parameterMap: function (data) {
-                                return JSON.stringify(data);
-                            },
-                            error: function (e) {
-                                alert("데이터 로드 중 오류가 발생했습니다: " + e.errors);
+                            data: function () {
+                                let articleTable = $("#articleTable").data("kendoGrid");
+                                return {
+                                    page: articleTable ? articleTable.dataSource.page() : 1,
+                                    pageSize: articleTable ? articleTable.dataSource.pageSize() : 10,
+                                    searchField: $("#searchField").data("kendoDropDownList").value(), // 선택된 검색 항목
+                                    searchValue: (searchField === 'startDate' || searchField === 'endDate') ? $("#searchDatePicker").data("kendoDatePicker").value() : $("#searchBox").data("kendoTextBox").value(), // DatePicker인지 TextBox인지에 따라 값 가져오기
+                                };
                             }
                         },
-                        serverPaging: true,
-                        serverSorting: true,
-                        pageSize: 10,
-                        schema: {
-                            data: "data",
-                            total: "total",
-                            model: {
-                                id: "id",
-                                fields: {
-                                    title: {type: "text"},
-                                    content: {type: "text"},
-                                    memberId: {type: "text"},
-                                    categoryValue: {type: "number"},
-                                    category: {type: "string"},
-                                    createdAt: {type: "date"},
-                                    startDate: {type: "date"},
-                                    endDate: {type: "date"}
-                                }
+                        parameterMap: function (data) {
+                            return JSON.stringify(data);
+                        }
+                    }, requestEnd: function (e) {
+                        isLoggedIn = e.response.isLoggedIn
+                        console.log("isLoggedIn : " + isLoggedIn)
+                        loginUi()
+                    },
+                    serverPaging: true,
+                    serverSorting: true,
+                    pageSize: 10,
+                    schema: {
+                        data: "data",
+                        total: "total",
+                        model: {
+                            id: "id",
+                            fields: {
+                                title: {type: "text"},
+                                content: {type: "text"},
+                                memberId: {type: "text"},
+                                categoryValue: {type: "number"},
+                                category: {type: "string"},
+                                createdAt: {type: "date"},
+                                startDate: {type: "date"},
+                                endDate: {type: "date"}
                             }
                         }
-                    },
-                    toolbar: [{
-                        type: "button",
-                        text: "새 글쓰기",
-                        click: openNewArticle
-                    }],
-                    autoBind: true,
-                    pageable: {
-                        refresh: true,
-                        pageSizes: true,
-                        buttonCount: 5
-                    },
-                    height: 600,
-                    selectable: true,
-                    change: onRowSelect,
-                    columns: [
-                        {field: "id", title: "Id", width: "100px", type: "number"},
-                        {field: "title", title: "Title"},
-                        {field: "content", title: "Content", hidden: true},
-                        {field: "category", title: "Category"},
-                        {field: "startDate", title: "Start Date", format: "{0:yyyy-MM-dd}"},
-                        {field: "endDate", title: "End Date", format: "{0:yyyy-MM-dd}"},
-                        {field: "createdAt", title: "CreatedAt", format: "{0:yyyy-MM-dd}", hidden: true},
-                        {field: "memberId", title: "author", width: "100px", editable: false}
-                    ]
-                });
-
-
-                let selectedArticledId;
-
-                function onRowSelect() {
-                    let grid = $("#articleTable").data("kendoGrid");
-                    let selectedItem = grid.dataItem(grid.select()); // 선택된 행의 데이터를 가져옵니다.
-
-                    if (selectedItem) {
-                        page_url = "/article/" + encodeURIComponent(selectedItem.id);
-                        loadArticleDialog(page_url);
                     }
+                },
+                toolbar: [{
+                    type: "button",
+                    text: "새 글쓰기",
+                    click: openNewArticle
+                }],
+                autoBind: true,
+                pageable: {
+                    refresh: true,
+                    pageSizes: true,
+                    buttonCount: 5
+                },
+                height: 600,
+                selectable: true,
+                change: onRowSelect,
+                columns: [
+                    {field: "id", title: "Id", width: "100px", type: "number"},
+                    {field: "title", title: "Title"},
+                    {field: "content", title: "Content", hidden: true},
+                    {field: "category", title: "Category"},
+                    {field: "startDate", title: "Start Date", format: "{0:yyyy-MM-dd}"},
+                    {field: "endDate", title: "End Date", format: "{0:yyyy-MM-dd}"},
+                    {field: "createdAt", title: "CreatedAt", format: "{0:yyyy-MM-dd}", hidden: true},
+                    {field: "memberId", title: "author", width: "100px", editable: false}
+                ]
+            }).data("kendoGrid");
+
+
+            function onRowSelect() {
+
+                let selectedItem = articleTableGrid.dataItem(articleTableGrid.select()); // 선택된 행의 데이터를 가져옵니다.
+
+                if (selectedItem) {
+                    page_url = `/article/${encodeURIComponent(selectedItem.id)}`;
+                    loadArticleDialog(page_url);
                 }
-
-
-                function openNewArticle() {
-                    if (loginStatus.isLoggedIn) {
-                        loadArticleDialog("/article/create");
-                    } else {
-                        alert("로그인 해야 게시글을 작성할 수 있습니다.");
-                    }
-
-
-                }
-
-
-                window.loadArticleDialog = function (page_url) {
-                    let article_datasource = new kendo.data.DataSource({
-                        transport: {
-                            read: {
-                                url: page_url,
-                                dataType: "html",
-                                type: "GET"
-                            }
-                        },
-                        requestEnd: function (data) {
-                            let articleContent = data.response;  // 서버에서 받은 HTML 컨텐츠
-                            if (articleContent) {
-                                // 다이얼로그 내용 설정 후 다이얼로그 열기
-                                $("#article_detail_dialog").html(articleContent);
-                                articleDialog.open();
-                                setTimeout(centerDialog, 100);
-                            } else {
-                                alert("게시글 내용을 불러오지 못했습니다.");
-                            }
-
-                        }
-                    });
-                    article_datasource.read();
-                }
-
-
-                // ***************    게시글 디테일 관련 ******************
-                let articleDialog = $("#article_detail_dialog").kendoDialog({
-                    width: "800px",
-                    visible: false,
-                    title: "게시글",
-                    closable: true,
-                    modal: true,
-
-                    close: function () {
-                        $("#article_detail_dialog").html("");
-
-                    }
-                }).data("kendoDialog");
-
-                function centerDialog() {
-                    let dialogElement = $("#article_detail_dialog").closest(".k-window");  // 다이얼로그의 wrapper를 가져옴
-                    let windowHeight = $(window).height();
-                    let dialogHeight = dialogElement.outerHeight();  // 다이얼로그의 높이
-                    let top = (windowHeight - dialogHeight) / 2;
-                    // 다이얼로그의 top 위치를 중앙으로 수동 설정
-                    dialogElement.css({
-                        "top": top + "px",
-                        "position": "fixed"
-                    });
-                }
-
-                // article_list buttons
-                $("#loginBtn").kendoButton({
-                    size: "large",
-                    themeColor: "info",
-                    rounded: "large",
-                    fillMode: "solid"
-                }).click(function () {
-                    window.location.href = "/login";
-                });
-
-                $("#logoutBtn").kendoButton({
-                    size: "large",
-                    themeColor: "error",
-                    rounded: "large",
-                    fillMode: "solid"
-                }).click(function () {
-                    if (confirm("로그아웃 하시겠습니까?")) {
-                        logout();
-                        window.location.reload();
-                    }
-                });
-
-                // article_write buttons
-
-
-                // article_editor buttons
-
-
-                // article_detail내 buttons
-                $("#updateBtn").click(function () {
-                    $("#article_detail_dialog").html("");
-                    loadArticleDialog("/article/update/" + selectedArticledId);
-                })
-                $("#deleteBtn").click(function () {
-                    window.location.href = "/article/delete/" + id;
-                })
-                $("#listBtn").click(function () {
-                    window.location.href = "/";
-                })
-
-
-                window.closeDialog = function () {
-                    $("#article_detail_dialog").html("");
-                    articleDialog.close();
-                    console.log("closeDialog");
-
-                }
-
-                $(".menu_item").kendoButton({
-                    themeColor: "base",
-                    rounded: "medium",
-
-                })
             }
-        )
-        ;
+
+
+            function openNewArticle() {
+                if (isLoggedIn) {
+                    loadArticleDialog("/article/create");
+                } else {
+                    alert("로그인 해야 게시글을 작성할 수 있습니다.");
+                }
+
+
+            }
+
+
+            window.loadArticleDialog = function (page_url) {
+                let article_datasource = new kendo.data.DataSource({
+                    transport: {
+                        read: {
+                            url: page_url,
+                            dataType: "html",
+                            type: "GET"
+                        }
+                    },
+                    requestEnd: function (data) {
+                        let articleContent = data.response;  // 서버에서 받은 HTML 컨텐츠
+                        if (articleContent) {
+                            // 다이얼로그 내용 설정 후 다이얼로그 열기
+                            $("#article_detail_dialog").html(articleContent);
+                            articleDialog.open();
+                            setTimeout(centerDialog, 100);
+                        } else {
+                            alert("게시글 내용을 불러오지 못했습니다.");
+                        }
+
+                    }
+                });
+                article_datasource.read();
+            }
+
+
+            // ***************    게시글 디테일 관련 ******************
+            let articleDialog = $("#article_detail_dialog").kendoDialog({
+                width: "800px",
+                visible: false,
+                title: "게시글",
+                closable: true,
+                modal: true,
+
+                close: function () {
+                    $("#article_detail_dialog").html("");
+                    articleTableGrid.refresh();
+                }
+            }).data("kendoDialog");
+
+            function centerDialog() {
+
+                let dialogElement = $("#article_detail_dialog").closest(".k-window");  // 다이얼로그의 wrapper를 가져옴
+                let windowHeight = $(window).height();
+                let dialogHeight = dialogElement.outerHeight();  // 다이얼로그의 높이
+                let top = (windowHeight - dialogHeight) / 2;
+                // 다이얼로그의 top 위치를 중앙으로 수동 설정
+                dialogElement.css({
+                    "top": top + "px",
+                    "position": "fixed"
+                });
+            }
+
+            // article_list buttons
+            $("#loginBtn").kendoButton({
+                size: "large",
+                themeColor: "info",
+                rounded: "large",
+                fillMode: "solid"
+            }).click(function () {
+                window.location.href = "/login";
+            });
+
+            $("#logoutBtn").kendoButton({
+                size: "large",
+                themeColor: "error",
+                rounded: "large",
+                fillMode: "solid"
+            }).click(function () {
+                if (confirm("로그아웃 하시겠습니까?")) {
+                    logout();
+                    window.location.reload();
+                }
+            });
+
+            window.closeDialog = function () {
+                $("#article_detail_dialog").html("");
+                articleDialog.close();
+                console.log("closeDialog");
+
+
+            }
+
+            $(".menu_item").kendoButton({
+                themeColor: "base",
+                rounded: "medium",
+
+            })
+
+
+        });
 
 
     </script>

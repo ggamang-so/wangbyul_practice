@@ -21,9 +21,11 @@
             padding: 10px;
 
         }
-        #buttons{
+
+        #buttons {
             display: flex;
         }
+
         ul {
             list-style: none;
             border-bottom: 1px solid #848282;
@@ -31,7 +33,7 @@
             align-items: center;
             height: fit-content;
             margin: 0;
-            padding:0;
+            padding: 0;
         }
 
         li {
@@ -40,17 +42,19 @@
             height: 100%;
         }
 
-        li:first-child{
-            width:110px;
+        li:first-child {
+            width: 110px;
             font-weight: bold;
             align-items: center;
 
             text-align: center;
 
         }
-        #content_li{
+
+        #content_li {
             align-items: flex-start;
         }
+
         #content {
             width: 80%;
             height: 600px;
@@ -67,91 +71,99 @@
             let memberId;
 
 
-
-
-            let transForm_dataSource=[];
-            let detail_url = "/api/article/" + encodeURIComponent(id);
+            let transForm_dataSource = [];
+            let detail_url = `/api/article/${encodeURIComponent(id)}`;
             let detail_dataSource = new kendo.data.DataSource({
-                transport:{
-                    read:{
+                transport: {
+                    read: {
                         url: detail_url,
                         type: "GET",
-                        contentType: "application/json"
+                        contentType: "application/json",
+                        headers: {
+                            "refreshToken": localStorage.getItem("refreshToken"),
+                            "loginId": localStorage.getItem("loginId")
+                        },
                     }
-                },requestEnd:function(e){
-                    let result = e.response
-                    memberId = result["memberId"];
-                    transForm_dataSource.push({field : "글쓴이", value: result["memberId"]});
-                    transForm_dataSource.push({field : "작성일시", value: result["createdAt"]});
-                    transForm_dataSource.push({field : "제목", value: result["title"]});
-                    transForm_dataSource.push({field : "시작일", value: result["startDate"]});
-                    transForm_dataSource.push({field : "종료일", value: result["endDate"]});
-                    transForm_dataSource.push({field : "카테고리", value: result["category"]});
-                    transForm_dataSource.push({field : "내용", value: result["content"]});
-                    console.log(transForm_dataSource);
-                    article_grid();
+                }, requestEnd: function (e) {
+                    let result = e.response.article
 
-                    if(loginId!=null && memberId===loginId){
+                    memberId = result["memberId"];
+                    transForm_dataSource.push({field: "글쓴이", value: result["memberId"]});
+                    transForm_dataSource.push({field: "작성일시", value: result["createdAt"]});
+                    transForm_dataSource.push({field: "제목", value: result["title"]});
+                    transForm_dataSource.push({field: "시작일", value: result["startDate"]});
+                    transForm_dataSource.push({field: "종료일", value: result["endDate"]});
+                    transForm_dataSource.push({field: "카테고리", value: result["category"]});
+                    transForm_dataSource.push({field: "내용", value: result["content"]});
+                    article_grid();
+                    if (loginId != null && memberId === loginId) {
                         $("#updateBtn").css("display", "block");
                         $("#deleteBtn").css("display", "block");
                     }
+                },error: function(e) {
+                    console.log(e.xhr.responseJSON.message); // 오류 메시지 표시
                 }
             });
             detail_dataSource.read();
-            function article_grid(){
+
+            function article_grid() {
                 $("#article_grid").kendoGrid({
                     dataSource: {
-                        data:transForm_dataSource,
+                        data: transForm_dataSource,
                         schema: {
                             model: {
                                 fields: {
-                                    field: { type: "string" },
-                                    value: { type: "string" }
+                                    field: {type: "string"},
+                                    value: {type: "string"}
                                 }
                             }
                         }
                     },
-                    columns:[
+                    columns: [
                         {
                             field: "field",
                             width: "30%",
-                            headerAttributes: { style: "display:none;" },
+                            headerAttributes: {style: "display:none;"},
                             attributes: {
                                 style: "background-color: #143b60; text-align: center; font-weight: bold; color: white" // 셀 스타일
                             }
                         },
-                        {field: "value", width: "70%", headerAttributes: { style: "display:none;" }}
+                        {field: "value", width: "70%", headerAttributes: {style: "display:none;"}}
                     ],
                     scrollable: false,
-                    dataBound: function(e) {
+                    dataBound: function (e) {
+                        let lastRow = e.sender.tbody.find("tr").last();
+                        lastRow.css("height", "300px");
 
-                        let lastRow = e.sender.tbody.find("tr").last(); // 마지막 행 선택
-                        lastRow.css("height", "300px"); // 원하는 높이로 설정
+
                     }
                 });
             }
 
 
-
-            function deleteArticle(id){
-                let delete_dataSource = new kendo.data.DataSource({
-                    transport:{
-                        destroy: {
-                            url: `/api/article/delete/${encodeURIComponent(id)}`,
-                            type: "DELETE",
-                            dataType: "json",
-                            contentType: "application/json",
-                            headers: {"Authorization": "Bearer " + localStorage.getItem("token")}
+            function deleteArticle(id) {
+                if (confirm("삭제한 게시글을 복구할 수 없습니다. 정말 게시글을 삭제하시겠습니까?")) {
+                    let delete_dataSource = new kendo.data.DataSource({
+                        transport: {
+                            read: {
+                                url: `/api/article/delete/${encodeURIComponent(id)}`,
+                                type: "DELETE",
+                                dataType: "json",
+                                contentType: "application/json",
+                                headers: {
+                                    "refreshToken": localStorage.getItem("refreshToken"),
+                                    "loginId": localStorage.getItem("loginId")
+                                },
+                            }
+                        }, requestEnd: function () {
+                            alert("게시글이 삭제되었습니다.")
+                            window.location.reload();
+                            window.parent.closeDialog();
                         }
-                    },requestEnd: function(e){
-                        window.location.reload();
-                        window.parent.closeDialog();
-
-                    }
-                })
-                delete_dataSource.transport.destroy();
+                    });
+                    delete_dataSource.read()
+                }
             }
-
 
 
             $("#updateBtn").kendoButton({
@@ -159,7 +171,7 @@
                 themeColor: "info",
                 rounded: "large",
                 fillMode: "solid"
-            }).click(function(){
+            }).click(function () {
                 window.parent.updateForm(id);
             });
 
@@ -168,7 +180,7 @@
                 themeColor: "error",
                 rounded: "large",
                 fillMode: "solid"
-            }).click(function(){
+            }).click(function () {
                 deleteArticle(id)
             });
 
@@ -177,10 +189,11 @@
                 themeColor: "base",
                 rounded: "large",
                 fillMode: "flat"
-            }).click(function(){
+            }).click(function () {
                 window.parent.location.reload()
                 window.parent.closeDialog();
             });
+
 
         })
     </script>
