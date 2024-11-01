@@ -27,7 +27,8 @@ public class ArticleController {
 
     //게시글 목록 페이지
     @GetMapping("/")
-    public String home() {
+    public String home(ModelMap model) {
+
         return "articles/article_list";
     }
 
@@ -42,14 +43,12 @@ public class ArticleController {
         map.addAttribute("id", id);
         return "articles/article_detail";
     }
-
     // 게시글 수정
     @GetMapping("/article/update/{id}")
     public String editArticle(@PathVariable("id") int id,ModelMap map){
         map.addAttribute("id", id);
         return "articles/article_editor";
     }
-
     //게시글 데쉬보드 페이지
     @GetMapping("/article/dashboard")
     public String dashboard() {

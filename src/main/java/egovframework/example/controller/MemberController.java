@@ -1,8 +1,5 @@
 package egovframework.example.controller;
 
-import egovframework.example.service.JwtService;
-import egovframework.example.service.MemberService;
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -26,21 +23,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class MemberController {
 
-    private final JwtService jwtService;
-
     @GetMapping("/signup")
-    public String signup() {
+    public String signup(@RequestAttribute("isLoggedIn") boolean isLoggedIn) {
         return "member/signup";
     }
 
-
-
     @GetMapping("/login")
-    public String loginForm(@Nullable  @RequestHeader("Authorization") String token, RedirectAttributes redirectAttributes) {
-        if(token == null || jwtService.isTokenExpired(token)) {
+    public String loginForm(@RequestAttribute("isLoggedIn") boolean isLoggedIn, RedirectAttributes redirectAttributes) {
+        if(!isLoggedIn) {
             return "member/login";
         }
         redirectAttributes.addFlashAttribute("errorMessage","이미 로그인 되어있습니다. 새로운 로그인을 원하시면 로그아웃 후 진행해주세요.");
+        redirectAttributes.addFlashAttribute("isLoggedIn", true);
         return "redirect:/";
     }
 

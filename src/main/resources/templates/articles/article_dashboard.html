@@ -11,6 +11,7 @@
     <!--  한글화 -->
     <script src="/static/kendo/js/cultures/kendo.culture.ko-KR.min.js"></script>
     <script src="/static/kendo/js/messages/kendo.messages.ko-KR.min.js"></script>
+    <script src="/static/js/common.js"></script>
 
 
     <script>
@@ -21,28 +22,21 @@
 
             })
 
-            $("#tilelayout").kendoTileLayout({
+            let tileLayout = $("#tilelayout").kendoTileLayout({
                 containers: [{
-                    colSpan: 2,
-                    rowSpan: 2,
-                    header: {
-                        text: "카테고리 비율"
-                    },
-                    bodyTemplate: kendo.template($("#category-ratio-chart-template").html())
-                }, {
-                    colSpan: 2,
-                    rowSpan: 1,
-                    header: {
-                        text: "카테고리별 게시글 수"
-                    },
-                    bodyTemplate: kendo.template($("#category-bar-chart-template").html())
-                }, {
                     colSpan: 1,
                     rowSpan: 1,
                     header: {
                         text: "총 게시글수"
                     },
                     bodyTemplate: kendo.template($("#total-article-template").html())
+                }, {
+                    colSpan: 2,
+                    rowSpan: 1,
+                    header: {
+                        text: "작성자 랭킹"
+                    },
+                    bodyTemplate: kendo.template($("#writer-rank-chart-template").html())
                 },{
                     colSpan: 2,
                     rowSpan: 1,
@@ -50,14 +44,21 @@
                         text: "날짜별 게시글 수"
                     },
                     bodyTemplate: kendo.template($("#article-day-chart-template").html())
-                }, {
-                    colSpan: 1,
-                    rowSpan: 1,
+                },{
+                    colSpan: 3,
+                    rowSpan: 2,
                     header: {
-                        text: "작성자 랭킹"
+                        text: "카테고리 비율"
                     },
-                    bodyTemplate: kendo.template($("#writer-rank-chart-template").html())
-                }, ],
+                    bodyTemplate: kendo.template($("#category-ratio-chart-template").html())
+                }, {
+                    colSpan: 2,
+                    rowSpan: 2,
+                    header: {
+                        text: "카테고리별 게시글 수"
+                    },
+                    bodyTemplate: kendo.template($("#category-bar-chart-template").html())
+                },],
                 columns: 5,
                 columnsWidth: 300,
                 rowsHeight: 235,
@@ -76,14 +77,10 @@
                         chart.options.categoryAxis.labels.visible = true;
                         chart.redraw();
                     }
-
-                    // for widgets that do not auto resize
-                    // https://docs.telerik.com/kendo-ui/styles-and-layout/using-kendo-in-responsive-web-pages
                     kendo.resize(e.container, true);
                 }
 
             })
-
             let categoryDataSource = new kendo.data.DataSource({
                 transport: {
                     read: {
@@ -91,47 +88,157 @@
                         type: "GET",
                         contentType: "application/json"
                     }
-                }, schema: {
+                },
+                schema: {
                     model: {
-                        field: {
-                            category: {type: "integer"},
+                        fields: {
+                            category: {type: "number"},
                             categoryDisplayName: {type: "string"},
-                            count: {type: "integer"}
+                            count: {type: "number"}
                         }
                     }
-                },requestEnd: function(e){
-                    console.log(e.response);
-                }
-            })
-            categoryDataSource.read();
-            $("#category-ratio-chart").kendoChart({
-                data: categoryDataSource,
-                seriesDefaults:{
-                    type: "donut",
-                    startAngle: 150,
-                },series: {
+                },
+                change: function () {
+                    // DataSource의 데이터를 콘솔에 출력하여 확인
 
-                    field: "count",
-                    categoryField: "categoryDisplayName"
+                    let data = this.data();
+                    let count = 0;
+                    for (let i = 0; i < data.length; ++i) {
+                        count += data[i].count;
+                    }
+                    let totalCountData = kendo.observable({
+                        totalCount: count
+                    })
+
+                    kendo.bind(tileLayout, totalCountData);
+
                 }
-                // seriesDefaults:{
-                //     type: "donut",
-                //     startAngle: 0,
-                //     labels:{
-                //         template: "#= categoryDisplayName # - kendo.format('{0:P}', percentage)#",
-                //         position: "outsideEnd",
-                //         visible: true,
-                //         background: "transparent"
-                //     }
-                // },series:{
-                //     data: categoryDataSource,
-                //     field: "count",
-                //     categoryField: "categoryDisplayName"
-                // }
+            });
+
+
+            $("#category-ratio-chart").kendoChart({
+                dataSource: categoryDataSource,  // 수정: dataSource로 직접 전달
+                series: [{
+                    type: "donut",
+                    field: "count", // 값이 되는 필드
+                    categoryField: "categoryDisplayName", // 라벨이 되는 필드
+                    labels: {
+                        visible: true,
+                        background: "transparent",
+                        position: "outsideEnd",
+                        template: "#= category # - #= kendo.format('{0:P}', percentage) #" // 라벨 형식
+                    }
+                }],
+                tooltip: {
+                    visible: true,
+                    template: "#= category # : #= value #건"
+                }
+            });
+
+            $("#category-bar-chart").kendoChart({
+                dataSource: categoryDataSource,  // 수정: dataSource로 직접 전달
+                series: [{
+                    type: "column",
+                    field: "count", // 값이 되는 필드
+                    categoryField: "categoryDisplayName", // 라벨이 되는 필드
+                    labels: {
+                        visible: true,
+                        background: "transparent",
+                        position: "outsideEnd",
+                        template: "#= value#" // 라벨 형식
+                    }
+                }],
+                tooltip: {
+                    visible: true,
+                    template: "#= category # : #= value #건"
+                }
+            });
+
+            let topRankCount;
+            $("#writer-rank-chart").kendoChart({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url: "/api/article/member/count",
+                            type: "GET",
+                            contentType: "application/json"
+                        }
+                    }, schema: {
+                        model: {
+                            fields: {
+                                memberId: {type: "string"},
+                                count: {type: "number"}
+                            }
+                        }
+                    }, change: function () {
+                        console.log("rank: ", this.data());
+                        topRankCount = this.data()[0].count + 2;
+                        console.log(topRankCount);
+                    }
+                }, series: [{
+                    type: "bar",
+                    field: "count", // 값이 되는 필드
+                    categoryField: "memberId", // 라벨이 되는 필드
+                    labels: {
+                        visible: true,
+                        background: "transparent",
+                        position: "outsideEnd",
+                        template: "#= value #건" // 라벨 형식
+                    }
+                }]
+            });
+
+            let today = new Date();
+            let last30Days = new Date();
+            last30Days.setDate(today.getDate() - 30);
+            $("#article-day-chart").kendoChart({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url: "/api/article/daily/count",
+                            type: "GET",
+                            contentType: "application/json"
+                        }
+                    }, schema: {
+                        model: {
+                            fields: {
+                                date: {type: "date"},
+                                count: {type: "number"}
+                            }
+                        }
+                    }, change: function () {
+                        console.log("daily: ", this.data());
+
+                    }
+                }, series: [{
+                    type: "line",
+                    style: "smooth",
+                    field: "count", // 값이 되는 필드
+                    categoryField: "date", // 라벨이 되는 필드
+                    labels: {
+                        visible: true,
+                        background: "transparent",
+                        position: "outsideEnd",
+                        template: "#= value #건" // 라벨 형식
+                    }
+                }], categoryAxis:{
+                    baseUnit: "days",           // 일 단위로 축 설정
+                    min: last30Days,             // 최근 30일 이전 날짜로 설정
+                    max: today,                  // 오늘 날짜로 설정하여 초기 화면 표시 범위 지정
+                    labels: {
+                        rotation: -45            // 가로축 라벨 회전 (보기 쉽게)
+                    }
+                },
+                pannable: {lock: "y" },
+                zoomable: {
+                    mousewheel: {lock: "y"},
+                    selection: {lock: "y"}
+                }
             })
 
 
         }) // jquery end
+
 
     </script>
 
@@ -145,7 +252,7 @@
     <hr>
 </header>
 <script id="total-article-template" type="text/x-kendo-template">
-    <h3>200</h3>
+    <h1 data-bind="text: totalCount"></h1>
     <div>Total Articles</div>
 </script>
 <script id="category-ratio-chart-template" type="text/x-kendo-template">

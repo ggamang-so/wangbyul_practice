@@ -43,3 +43,20 @@ select * from article;
 commit;
 
 update member set member_pw = '$2a$10$Y4e0es8aWenNxM9ATAWfw.GPllquDpLAEmmJuRq62LGwdjA570QOm' where member_id='ggamangso';
+
+select member_id, count(*) as count from article group by member_id order by count desc limit 5;
+
+COPY article(title, content, member_id, category, start_date, end_date, created_at)
+FROM 'C:\lhwWorkspace\leehyunwoo\kendotest/articles.csv'
+DELIMITER ','
+CSV HEADER;
+
+select count(id) from article;
+
+select date(created_at) as date, count(*) as count from article group by date(created_at) order by date(created_at) desc;
+
+select currval('article_id_seq');
+
+select count(id) from article where 1=1 and category = cast('1' as integer);
+select count(id) from article where category = 1;
+select count(id) from article where 1=1  AND start_date = cast('2024-01-01' as date);

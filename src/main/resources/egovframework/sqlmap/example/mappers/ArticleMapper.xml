@@ -15,10 +15,50 @@
     </resultMap>
 
     <select id="totalArticleCount" resultType="int">
-        select count(id) from article
+        select count(id) from article where 1=1
+        <if test="searchField != null and searchField !=''">
+            <choose>
+                <when test="searchField=='title'">
+                    AND title LIKE CONCAT('%', #{searchValue}, '%')
+                </when>
+                <when test="searchField=='memberId'">
+                    AND member_id LIKE CONCAT('%', #{searchValue}, '%')
+                </when>
+                <when test="searchField=='category'">
+                    and category = cast(#{searchValue} as integer)
+                </when>
+                <when test="searchField=='startDate'">
+                    AND start_date = cast(#{searchValue} as date)+ INTERVAL '1 day'
+                </when>
+                <when test="searchField=='endDate'">
+                    AND end_date = cast(#{searchValue} as date)+ INTERVAL '1 day'
+                </when>
+            </choose>
+        </if>
+
     </select>
     <select id="findAllArticle" resultMap="articleResultMap">
-        SELECT * FROM article ORDER BY id DESC
+        SELECT * FROM article  where 1=1
+        <if test="searchField != null and searchField !=''">
+            <choose>
+                <when test="searchField=='title'">
+                    AND title LIKE CONCAT('%', #{searchValue}, '%')
+                </when>
+                <when test="searchField=='memberId'">
+                    AND member_id LIKE CONCAT('%', #{searchValue}, '%')
+                </when>
+                <when test="searchField=='category'">
+                    and category = cast(#{searchValue} as integer)
+                </when>
+                <when test="searchField=='startDate'">
+                    AND start_date = cast(#{searchValue} as date)+ INTERVAL '1 day'
+                </when>
+                <when test="searchField=='endDate'">
+                    AND end_date = cast(#{searchValue} as date)+ INTERVAL '1 day'
+                </when>
+            </choose>
+        </if>
+        ORDER BY id DESC
         LIMIT #{pageSize} OFFSET (#{page}-1) * #{pageSize}
     </select>
     <select id="findById"  resultMap="articleResultMap">
@@ -27,7 +67,7 @@
     <delete id="deleteById" >
         delete from article where id=#{id}
     </delete>
-    <insert id="save" parameterType="egovframework.example.dto.ArticleDto" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    <insert id="save" parameterType="egovframework.example.dto.ArticleDto" >
         insert into article (title, content, member_id, category, start_date, end_date) values ( #{title}, #{content}, #{memberId}, #{categoryValue}, #{startDate}, #{endDate})
     </insert>
     <select id="returningId" resultType="int">
@@ -39,5 +79,12 @@
     <select id="articleCountPerCategory" resultType="egovframework.example.dto.CategoryDto">
         select category, count(*) AS count from article group by category order by category
     </select>
+    <select id="articleCountPerMemberId" resultType="egovframework.example.dto.MemberArticleDto">
+        select member_id, count(*) as count from article group by member_id order by count desc limit 5
+    </select>
+    <select id="articleCountDaily" resultType="egovframework.example.dto.DailyArticleDto">
+    select date(created_at) as date, count(*) as count from article group by date(created_at) order by date(created_at) desc
+    </select>
+
 
 </mapper>

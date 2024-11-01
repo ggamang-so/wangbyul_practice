@@ -2,6 +2,8 @@ package egovframework.example.service;
 
 import egovframework.example.dto.MemberDto;
 
+import java.util.Map;
+
 
 /**
  * @author : com
@@ -20,5 +22,5 @@ import egovframework.example.dto.MemberDto;
 public interface MemberService {
 
     public void signUpMember(MemberDto memberDto) throws Exception;
-    public String loginMember(String memberId, String memberPw);
+    public Map<String, String> loginMember(String memberId, String memberPw);
 }

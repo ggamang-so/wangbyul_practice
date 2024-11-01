@@ -2,6 +2,9 @@ package egovframework.example.service;
 
 import egovframework.example.dto.ArticleDto;
 import egovframework.example.dto.CategoryDto;
+import egovframework.example.dto.DailyArticleDto;
+import egovframework.example.dto.MemberArticleDto;
+import egovframework.example.vo.PageVo;
 
 import java.util.List;
 
@@ -23,7 +26,7 @@ public interface ArticleService {
      */
 
 // 게시글 전체 조회
-        public List<ArticleDto> getArticleList(int page, int pageSize) throws Exception;
+        public List<ArticleDto> getArticleList(PageVo pageVo) throws Exception;
 
 
     //게시글 1개 조회 - 게시글 ID로
@@ -39,8 +42,12 @@ public interface ArticleService {
     //게시글 수정
     public void updateArticle(ArticleDto article);
     // 게시글 삭제
-    public int getTotalArticleCount() ;
+    public int getTotalArticleCount(PageVo pageVo) ;
     //카테고리별 게시글 갯수
     public List<CategoryDto> getCountArticleCategory();
+
+    public List<MemberArticleDto> getArticleCountPerMemberId();
+
+    List<DailyArticleDto> getArticleCountDaily();
 }
 

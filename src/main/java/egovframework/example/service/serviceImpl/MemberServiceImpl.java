@@ -5,9 +5,13 @@ import egovframework.example.dto.MemberDto;
 import egovframework.example.service.JwtService;
 import egovframework.example.service.MemberService;
 import egovframework.example.util.PasswordUtil;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -31,11 +35,13 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberDao memberDao;
     private final JwtService jwtService;
+    private final RedisTemplate<String, String> redisTemplate;
 
 
-    public MemberServiceImpl(MemberDao memberDao, JwtService jwtService) {
+    public MemberServiceImpl(MemberDao memberDao, JwtService jwtService, RedisTemplate<String, String> redisTemplate) {
         this.memberDao = memberDao;
         this.jwtService = jwtService;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -51,10 +57,17 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public String loginMember(String memberId, String memberPw) {
+    public Map<String, String> loginMember(String memberId, String memberPw) {
+        Map<String, String> map = new HashMap<String, String>();
         MemberDto memberDto = memberDao.findById(memberId);
         if (memberDto != null && PasswordUtil.verifyPassword(memberPw, memberDto.getMemberPw())){
-            return jwtService.generateToken(memberId); // 로그인 성공시 jwt 토큰 반환
+            String accessToken = jwtService.generateAccessToken(memberDto.getMemberId());
+            String refreshToken = jwtService.generateRefreshToken(memberDto.getMemberId());
+            map.put("accessToken", accessToken);
+            map.put("refreshToken", refreshToken);
+            redisTemplate.opsForValue().set(memberId,refreshToken, 7, TimeUnit.DAYS);
+            return map;
+
         } else{
             throw new RuntimeException("Invalid username or password");
         }

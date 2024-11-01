@@ -4,11 +4,15 @@ import egovframework.example.Const.Category;
 import egovframework.example.dao.ArticleDao;
 import egovframework.example.dto.ArticleDto;
 import egovframework.example.dto.CategoryDto;
+import egovframework.example.dto.DailyArticleDto;
+import egovframework.example.dto.MemberArticleDto;
 import egovframework.example.service.ArticleService;
+import egovframework.example.vo.PageVo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author : ggamangso
@@ -35,17 +39,24 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     // 게시글 전체 조회
-    public List<ArticleDto> getArticleList(int page, int pageSize) throws Exception {
-       return articleDao.findAllArticle(page, pageSize);
+    public List<ArticleDto> getArticleList(PageVo pageVo) throws Exception {
+
+        if(pageVo.getSearchField().equals("category")){
+            System.out.println("111");
+            pageVo.setSearchValue(Category.getValue(pageVo.getSearchValue()));
+        }
+        List<ArticleDto> list = articleDao.findAllArticle(pageVo);
+        for(ArticleDto articleDto : list){
+            articleDto.setCategory(Category.getDisplayName(articleDto.getCategoryValue()));
+        }
+       return list;
     }
 
 
     //게시글 1개 조회 - 게시글 ID로
     public ArticleDto getArticle(int id){
         ArticleDto articleDto = articleDao.findById(id);
-        System.out.println(articleDto);
         articleDto.setCategory(Category.getDisplayName(articleDto.getCategoryValue()));
-        System.out.println(articleDto);
         return articleDto;
     }
     //게시글 1개 조회 - 게시글 ID, 작성자(memberId) - 조회시 articleDto 반환, 없을 시 null 반환
@@ -72,18 +83,26 @@ public class ArticleServiceImpl implements ArticleService {
     }
     //게시글 수정
     public void updateArticle(ArticleDto articleDto) {
-        System.out.println("log : update article dto -> " + articleDto.toString());
         articleDao.update(articleDto);
-
     }
     // 게시글 총 갯수
-    public int getTotalArticleCount() {
-        return articleDao.totalArticleCount();
+    public int getTotalArticleCount(PageVo pageVo) {
+        return articleDao.totalArticleCount(pageVo);
     }
 
     @Override
     public List<CategoryDto> getCountArticleCategory() {
         return articleDao.articleCountPerCategory();
+    }
+
+    @Override
+    public List<MemberArticleDto> getArticleCountPerMemberId() {
+        return articleDao.articleCountPerMemberId();
+    }
+
+    @Override
+    public List<DailyArticleDto> getArticleCountDaily() {
+        return articleDao.articleCountDaily();
     }
 }
 
